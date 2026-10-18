@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>아침 뉴스 브리핑</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☀️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f5f1;--card:#ffffff;--soft:#efede6;--text:#1f1e1c;--sub:#5f5e5a;--muted:#8a8984;--line:#e3e1d9;
+  --up:#d03b3b;--down:#2563c9;--accent:#2563c9;
+  --c0:#d85a30;--c1:#534ab7;--c2:#1d9e75;--c3:#ba7517;--c4:#993556;--c5:#185fa5;
+  --kr-bg:#e6f3e0;--kr-tx:#2f6b14;--fx-bg:#eceafd;--fx-tx:#4a40a8;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#161615;--card:#21211f;--soft:#2b2b28;--text:#ecebe6;--sub:#b5b3ab;--muted:#86857f;--line:#363632;
+  --up:#ff6b6b;--down:#6aa5ff;--accent:#6aa5ff;
+  --c0:#f0997b;--c1:#afa9ec;--c2:#5dcaa5;--c3:#ef9f27;--c4:#ed93b1;--c5:#85b7eb;
+  --kr-bg:#27401a;--kr-tx:#b7e08c;--fx-bg:#2f2a5c;--fx-tx:#cecbf6;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Sans KR",system-ui,-apple-system,sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 60px}
+a{color:inherit}
+header h1{font-size:24px;margin:0;font-weight:700}
+.meta{color:var(--muted);font-size:13px;margin-top:2px}
+.bar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:16px}
+select,button,input{font:inherit;font-size:15px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:8px 12px}
+button{cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:16px 0 4px}
+@media (min-width:560px){.grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.m{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.m .n{font-size:12px;color:var(--sub)}
+.m .v{font-size:19px;font-weight:700;line-height:1.3}
+.m .c{font-size:12px}
+.up{color:var(--up)}.down{color:var(--down)}.flat{color:var(--muted)}
+.mc{font-size:13px;color:var(--sub);margin:6px 2px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;scroll-margin-top:12px}
+.card h2{font-size:18px;margin:0 0 10px;display:flex;align-items:center;gap:8px;font-weight:700}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.hl{margin:0;padding:0;list-style:none}
+.hl li{font-size:16px;font-weight:500;padding:6px 0;border-bottom:1px solid var(--line)}
+.hl li:last-child{border:none}
+.ins p{margin:0 0 8px;font-size:15px}
+.item{padding:10px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:none;padding-top:2px}
+.item h3{font-size:16px;margin:0 0 3px;font-weight:700}
+.item p{margin:0 0 4px;font-size:14.5px;color:var(--sub)}
+.src{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.src a{font-size:12px;text-decoration:none;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--sub)}
+.tag{font-size:11px;padding:1px 6px;border-radius:6px;margin-right:4px;font-weight:500}
+.kr{background:var(--kr-bg);color:var(--kr-tx)}.fx{background:var(--fx-bg);color:var(--fx-tx)}
+.pv{padding:10px 0;border-top:1px solid var(--line)}
+.pv:first-of-type{border:none;padding-top:0}
+.pv b{display:block;margin-bottom:4px}
+.pv div{font-size:14.5px;margin:2px 0}
+.sc{display:grid;grid-template-columns:62px 44px 1fr;gap:6px;padding:6px 0;border-top:1px solid var(--line);font-size:14.5px}
+.sc:first-of-type{border:none}
+.sc .t{font-weight:700}.sc .r{color:var(--muted);font-size:12px;padding-top:2px}
+.kw{margin-top:10px}
+.kw h3{font-size:15px;margin:0 0 4px}
+.kw .none{font-size:13px;color:var(--muted)}
+#lock{max-width:360px;margin:18vh auto 0;text-align:center}
+#lock h1{font-size:22px}
+#lock input{width:100%;margin:12px 0 8px;padding:12px}
+#lock button{width:100%;padding:12px;background:var(--text);color:var(--bg);border:none;font-weight:700}
+.err{color:var(--up);font-size:14px;min-height:20px}
+.toc{display:flex;gap:6px;overflow-x:auto;padding:4px 0 2px;margin-top:12px}
+.toc a{flex:none;font-size:13px;text-decoration:none;padding:5px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+footer{color:var(--muted);font-size:12px;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="lock" hidden>
+    <h1>☀️ 아침 뉴스 브리핑</h1>
+    <div class="meta">비밀번호를 한 번 입력하면 이 기기에서 기억합니다.</div>
+    <form id="pwform"><input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password"><button>열기</button></form>
+    <div class="err" id="err"></div>
+  </div>
+  <div id="app" hidden></div>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const b64e = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const store = {get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}, del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const ICONS = ["📈","🌏","💻","🏙️","📰","📰"];
+let keyRaw = store.get("briefing-key");
+let dates = [];
+
+async function getJSON(p){ const r = await fetch(p, {cache:"no-store"}); if(!r.ok) throw new Error(p); return r.json(); }
+
+async function deriveKey(pw){
+  const meta = await getJSON("data/meta.json");
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({name:"PBKDF2", salt:b64d(meta.salt), iterations:meta.iterations, hash:"SHA-256"}, base, 256);
+  return b64e(bits);
+}
+
+async function decryptDay(date){
+  const blob = await getJSON(`data/${date}.json`);
+  const key = await crypto.subtle.importKey("raw", b64d(keyRaw), "AES-GCM", false, ["decrypt"]);
+  const plain = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64d(blob.iv)}, key, b64d(blob.ct));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+
+function sources(page, ids){
+  return `<div class="src">${(ids||[]).map(i => page.articles[i]).filter(Boolean).map(a =>
+    `<a href="${esc(a.url)}" target="_blank" rel="noopener"><span class="tag ${a.origin==="국내"?"kr":"fx"}">${esc(a.origin)}</span>${esc(a.source)}</a>`).join("")}</div>`;
+}
+function item(page, it){
+  return `<div class="item"><h3>${esc(it.title)}</h3><p>${esc(it.summary)}</p>${sources(page, it.article_ids)}</div>`;
+}
+
+function render(page){
+  const b = page.briefing, arrow = {up:"▲", down:"▼", flat:""};
+  const opts = dates.map(d => `<option value="${d}" ${d===page.date?"selected":""}>${d}</option>`).join("");
+  $("#app").innerHTML = `
+  <header>
+    <div class="bar"><div><h1>${esc(page.date_label)} 아침 브리핑</h1>
+      <div class="meta">기사 ${page.article_count}건 분석 · ${esc(page.generated_at)} 생성</div></div>
+      <select id="day" aria-label="지난 브리핑">${opts}</select></div>
+  </header>
+  <div class="grid">${page.markets.map(m => `<div class="m"><div class="n">${esc(m.name)}</div><div class="v">${esc(m.text)}</div>
+    <div class="c ${m.direction}">${arrow[m.direction]} ${esc(m.change)}</div></div>`).join("")}</div>
+  <div class="mc">${esc(b.market_comment)}</div>
+  <nav class="toc"><a href="#top3">핵심</a><a href="#insight">시사점</a>${b.sections.map((s,i)=>`<a href="#sec-${i}">${esc(s.name)}</a>`).join("")}<a href="#views">국내vs외신</a><a href="#sched">일정</a><a href="#kw">키워드</a></nav>
+  <section class="card" id="top3"><h2>🔥 오늘의 핵심</h2><ul class="hl">${b.headlines.map(h=>`<li>${esc(h)}</li>`).join("")}</ul></section>
+  <section class="card ins" id="insight"><h2>💡 오늘의 시사점</h2>${b.insight.map(t=>`<p>▸ ${esc(t)}</p>`).join("")}</section>
+  ${b.sections.map((s,i)=>`<section class="card" id="sec-${i}"><h2><span class="dot" style="background:var(--c${i%6})"></span>${ICONS[i%6]} ${esc(s.name)}</h2>
+    ${s.items.map(it=>item(page,it)).join("")}</section>`).join("")}
+  <section class="card" id="views"><h2>🔍 국내 vs 외신 시각</h2>${b.perspectives.map(p=>`<div class="pv"><b>${esc(p.topic)}</b>
+    <div><span class="tag kr">국내</span>${esc(p.domestic)}</div><div><span class="tag fx">외신</span>${esc(p.foreign)}</div>${sources(page,p.article_ids)}</div>`).join("")}</section>
+  <section class="card" id="sched"><h2>📅 오늘의 일정</h2>${b.schedule.length ? b.schedule.map(s=>`<div class="sc"><span class="t">${esc(s.time)}</span><span class="r">${esc(s.region)}</span><span>${esc(s.event)}</span></div>`).join("") : '<div class="meta">확인된 일정이 없습니다.</div>'}</section>
+  <section class="card" id="kw"><h2>🎯 관심 키워드</h2>${b.keywords.map(k=>`<div class="kw"><h3># ${esc(k.keyword)} <span class="meta">${k.items.length}건</span></h3>
+    ${k.items.length ? k.items.map(it=>item(page,it)).join("") : '<div class="none">오늘은 관련 뉴스가 없습니다.</div>'}</div>`).join("")}</section>
+  <footer>AI(Claude)가 기사를 요약했습니다. 중요한 내용은 원문을 확인하세요.<br><button id="logout" style="margin-top:8px;font-size:12px;padding:4px 10px">이 기기에서 비밀번호 잊기</button></footer>`;
+  $("#day").onchange = e => { history.replaceState(null, "", `?d=${e.target.value}`); show(e.target.value); };
+  $("#logout").onclick = () => { store.del("briefing-key"); location.reload(); };
+  if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+}
+
+async function show(date){
+  try { render(await decryptDay(date)); $("#lock").hidden = true; $("#app").hidden = false; }
+  catch(e){ store.del("briefing-key"); keyRaw = null; $("#app").hidden = true; $("#lock").hidden = false;
+    $("#err").textContent = e.name === "OperationError" ? "비밀번호가 맞지 않습니다." : ""; }
+}
+
+$("#pwform").onsubmit = async e => {
+  e.preventDefault();
+  const pw = $("#pw").value;
+  if (!pw) { $("#err").textContent = "비밀번호를 입력하세요."; return; }
+  $("#err").textContent = "확인 중…";
+  keyRaw = await deriveKey(pw);
+  await show(current());
+  if (keyRaw) store.set("briefing-key", keyRaw);
+};
+$("#pw").oninput = () => { $("#err").textContent = ""; };
+
+function current(){ const d = new URLSearchParams(location.search).get("d"); return dates.includes(d) ? d : dates[0]; }
+
+(async () => {
+  try { dates = await getJSON("data/index.json"); } catch(e) { dates = []; }
+  if (!dates.length) { $("#lock").hidden = false; $("#err").textContent = "아직 발행된 브리핑이 없습니다."; return; }
+  if (keyRaw) show(current()); else $("#lock").hidden = false;
+})();
+</script>
+</body>
+</html>

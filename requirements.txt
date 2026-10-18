@@ -1,0 +1,8 @@
+anthropic>=1.0
+pydantic>=2
+feedparser
+requests
+yfinance
+curl_cffi
+pyyaml
+cryptography

@@ -1,0 +1,71 @@
+# ============================================================
+#  아침 뉴스 브리핑 설정 파일
+#  - 이 파일만 고치면 키워드·언론사·지표를 바꿀 수 있습니다.
+#  - GitHub 웹사이트에서 이 파일을 열고 연필(✏️) 버튼으로 수정하세요.
+#  - 줄 앞의 공백(들여쓰기)은 그대로 유지해야 합니다.
+# ============================================================
+
+# 브리핑을 만들 AI 모델 (claude-opus-5-5 / claude-sonnet-5-5 / claude-haiku-5-5)
+model: claude-opus-5-5
+
+# 분야별로 담을 뉴스 개수
+items_per_section: 4
+
+# 관심 키워드 (원하는 만큼 추가/삭제)
+keywords:
+  - 반도체·AI칩
+  - 부동산 정책
+  - 미국 금리·연준
+  - 미중 무역·관세
+
+# 브리핑 분야 (이름을 바꾸면 카톡/웹페이지 제목도 바뀝니다)
+sections:
+  - 증시·경제
+  - 정치·국제
+  - IT·AI
+  - 사회·생활
+
+# 시장 지표 (이름은 카톡 표에 들어가므로 6글자 이내)
+markets:
+  - { name: 원/달러, ticker: "KRW=X", unit: "원" }
+  - { name: 美10년물, ticker: "^TNX", unit: "%" }
+  - { name: WTI유가, ticker: "CL=F", unit: "$" }
+  - { name: 금, ticker: "GC=F", unit: "$" }
+  - { name: 비트코인, ticker: "BTC-USD", unit: "$" }
+
+# 뉴스 출처 (RSS 주소). origin: 국내 / 외신
+feeds:
+  # ---- 국내 ----
+  - { name: 연합뉴스, origin: 국내, url: "https://www.yna.co.kr/rss/economy.xml" }
+  - { name: 연합뉴스, origin: 국내, url: "https://www.yna.co.kr/rss/politics.xml" }
+  - { name: 연합뉴스, origin: 국내, url: "https://www.yna.co.kr/rss/international.xml" }
+  - { name: 연합뉴스, origin: 국내, url: "https://www.yna.co.kr/rss/society.xml" }
+  - { name: 연합뉴스, origin: 국내, url: "https://www.yna.co.kr/rss/industry.xml" }
+  - { name: 연합뉴스, origin: 국내, url: "https://www.yna.co.kr/rss/market.xml" }
+  - { name: 한국경제, origin: 국내, url: "https://www.hankyung.com/feed/economy" }
+  - { name: 한국경제, origin: 국내, url: "https://www.hankyung.com/feed/finance" }
+  - { name: 한국경제, origin: 국내, url: "https://www.hankyung.com/feed/it" }
+  - { name: 한국경제, origin: 국내, url: "https://www.hankyung.com/feed/realestate" }
+  - { name: 매일경제, origin: 국내, url: "https://www.mk.co.kr/rss/30100041/" }
+  - { name: 매일경제, origin: 국내, url: "https://www.mk.co.kr/rss/50200011/" }
+  - { name: 전자신문, origin: 국내, url: "https://rss.etnews.com/Section901.xml" }
+  # ---- 외신 ----
+  - { name: CNBC, origin: 외신, url: "https://www.cnbc.com/id/100003114/device/rss/rss.html" }
+  - { name: CNBC, origin: 외신, url: "https://www.cnbc.com/id/20910258/device/rss/rss.html" }
+  - { name: CNBC, origin: 외신, url: "https://www.cnbc.com/id/19854910/device/rss/rss.html" }
+  - { name: WSJ, origin: 외신, url: "https://news.google.com/rss/search?q=site:wsj.com+when:1d&hl=en-US&gl=US&ceid=US:en" }
+  - { name: Bloomberg, origin: 외신, url: "https://news.google.com/rss/search?q=site:bloomberg.com+when:1d&hl=en-US&gl=US&ceid=US:en" }
+  - { name: AP, origin: 외신, url: "https://news.google.com/rss/search?q=site:apnews.com+when:1d&hl=en-US&gl=US&ceid=US:en" }
+  - { name: NYT, origin: 외신, url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml" }
+  - { name: NYT, origin: 외신, url: "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml" }
+  - { name: NYT, origin: 외신, url: "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml" }
+  - { name: BBC, origin: 외신, url: "https://feeds.bbci.co.uk/news/world/rss.xml" }
+  - { name: BBC, origin: 외신, url: "https://feeds.bbci.co.uk/news/business/rss.xml" }
+  - { name: Nikkei Asia, origin: 외신, url: "https://asia.nikkei.com/rss/feed/nar" }
+  # 로이터·외신의 한국 관련 보도 (구글 뉴스 경유)
+  - { name: Reuters, origin: 외신, url: "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en" }
+  - { name: 외신(한국 관련), origin: 외신, url: "https://news.google.com/rss/search?q=%22South+Korea%22+when:1d&hl=en-US&gl=US&ceid=US:en" }
+
+# 피드 하나에서 가져올 최대 기사 수 / 최근 몇 시간 기사까지 볼지
+max_per_feed: 15
+lookback_hours: 26
