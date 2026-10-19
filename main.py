@@ -73,7 +73,7 @@ def cmd_build() -> None:
         "articles": {str(i): {k: by_id[i][k] for k in ("title", "url", "source", "origin")}
                      for i in sorted(used) if i in by_id},
     }
-    publish.save(page, date, os.environ["BRIEFING_PASSWORD"])
+    publish.save(page, date)
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(page, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"[완료] {date_label} 브리핑 저장")

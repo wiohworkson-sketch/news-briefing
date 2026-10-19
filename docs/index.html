@@ -77,8 +77,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin-top:30px}
 <div class="wrap">
   <div id="lock" hidden>
     <h1>☀️ 아침 뉴스 브리핑</h1>
-    <div class="meta">비밀번호를 한 번 입력하면 이 기기에서 기억합니다.</div>
-    <form id="pwform"><input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password"><button>열기</button></form>
     <div class="err" id="err"></div>
   </div>
   <div id="app" hidden></div>
@@ -86,28 +84,10 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin-top:30px}
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-const b64e = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
-const store = {get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}, del(k){try{localStorage.removeItem(k)}catch(e){}}};
 const ICONS = ["📈","🌏","💻","🏙️","📰","📰"];
-let keyRaw = store.get("briefing-key");
 let dates = [];
 
 async function getJSON(p){ const r = await fetch(p, {cache:"no-store"}); if(!r.ok) throw new Error(p); return r.json(); }
-
-async function deriveKey(pw){
-  const meta = await getJSON("data/meta.json");
-  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({name:"PBKDF2", salt:b64d(meta.salt), iterations:meta.iterations, hash:"SHA-256"}, base, 256);
-  return b64e(bits);
-}
-
-async function decryptDay(date){
-  const blob = await getJSON(`data/${date}.json`);
-  const key = await crypto.subtle.importKey("raw", b64d(keyRaw), "AES-GCM", false, ["decrypt"]);
-  const plain = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64d(blob.iv)}, key, b64d(blob.ct));
-  return JSON.parse(new TextDecoder().decode(plain));
-}
 
 function sources(page, ids){
   return `<div class="src">${(ids||[]).map(i => page.articles[i]).filter(Boolean).map(a =>
@@ -139,35 +119,22 @@ function render(page){
   <section class="card" id="sched"><h2>📅 오늘의 일정</h2>${b.schedule.length ? b.schedule.map(s=>`<div class="sc"><span class="t">${esc(s.time)}</span><span class="r">${esc(s.region)}</span><span>${esc(s.event)}</span></div>`).join("") : '<div class="meta">확인된 일정이 없습니다.</div>'}</section>
   <section class="card" id="kw"><h2>🎯 관심 키워드</h2>${b.keywords.map(k=>`<div class="kw"><h3># ${esc(k.keyword)} <span class="meta">${k.items.length}건</span></h3>
     ${k.items.length ? k.items.map(it=>item(page,it)).join("") : '<div class="none">오늘은 관련 뉴스가 없습니다.</div>'}</div>`).join("")}</section>
-  <footer>AI(Gemini)가 기사를 요약했습니다. 중요한 내용은 원문을 확인하세요.<br><button id="logout" style="margin-top:8px;font-size:12px;padding:4px 10px">이 기기에서 비밀번호 잊기</button></footer>`;
+  <footer>AI(Gemini)가 기사를 요약했습니다. 중요한 내용은 원문을 확인하세요.</footer>`;
   $("#day").onchange = e => { history.replaceState(null, "", `?d=${e.target.value}`); show(e.target.value); };
-  $("#logout").onclick = () => { store.del("briefing-key"); location.reload(); };
   if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
 }
 
 async function show(date){
-  try { render(await decryptDay(date)); $("#lock").hidden = true; $("#app").hidden = false; }
-  catch(e){ store.del("briefing-key"); keyRaw = null; $("#app").hidden = true; $("#lock").hidden = false;
-    $("#err").textContent = e.name === "OperationError" ? "비밀번호가 맞지 않습니다." : ""; }
+  try { render(await getJSON(`data/${date}.json`)); $("#lock").hidden = true; $("#app").hidden = false; }
+  catch(e){ $("#app").hidden = true; $("#lock").hidden = false; $("#err").textContent = "브리핑을 불러오지 못했습니다. 잠시 후 다시 열어주세요."; }
 }
-
-$("#pwform").onsubmit = async e => {
-  e.preventDefault();
-  const pw = $("#pw").value;
-  if (!pw) { $("#err").textContent = "비밀번호를 입력하세요."; return; }
-  $("#err").textContent = "확인 중…";
-  keyRaw = await deriveKey(pw);
-  await show(current());
-  if (keyRaw) store.set("briefing-key", keyRaw);
-};
-$("#pw").oninput = () => { $("#err").textContent = ""; };
 
 function current(){ const d = new URLSearchParams(location.search).get("d"); return dates.includes(d) ? d : dates[0]; }
 
 (async () => {
   try { dates = await getJSON("data/index.json"); } catch(e) { dates = []; }
   if (!dates.length) { $("#lock").hidden = false; $("#err").textContent = "아직 발행된 브리핑이 없습니다."; return; }
-  if (keyRaw) show(current()); else $("#lock").hidden = false;
+  show(current());
 })();
 </script>
 </body>
