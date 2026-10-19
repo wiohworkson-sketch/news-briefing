@@ -172,3 +172,112 @@ def render(page: dict, path: Path) -> int:
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path, "PNG", optimize=True)
     return bottom
+
+
+# ───────────── 오늘 장 전망 카드 ─────────────
+NAVY = (17, 24, 39)
+OPEN_STYLE = {  # 시초가 예상별 색 (국내 관례: 상승=빨강, 하락=파랑)
+    "갭상승": ((220, 38, 38), (255, 255, 255)), "강보합": ((254, 226, 226), (185, 28, 28)),
+    "보합": ((229, 231, 235), (55, 65, 81)),
+    "약보합": ((219, 234, 254), (29, 78, 216)), "갭하락": ((37, 99, 235), (255, 255, 255)),
+}
+UP_BG, DOWN_BG = (254, 242, 242), (239, 246, 255)
+
+
+def render_market(page: dict, path: Path) -> int:
+    """오늘 장 전망 카드를 저장하고 실제 높이(px)를 돌려준다."""
+    m = page["briefing"]["market"]
+    img = Image.new("RGB", (W, 1500), BG)
+    d = ImageDraw.Draw(img)
+    inner = W - PAD * 2
+
+    # 헤더
+    d.rectangle([0, 0, W, 108], fill=NAVY)
+    d.text((PAD, 16), "오늘 장 전망", font=_font("bold", 44), fill=(255, 255, 255))
+    d.text((PAD, 70), f"{page['date_label']} · 밤사이 시장과 야간선물 반영", font=_font("regular", 22),
+           fill=(190, 198, 215))
+
+    # 밤사이 시장 (3 x 2)
+    y = 124
+    mk = page.get("outlook_markets", [])[:6]
+    cols, gap = 3, 10
+    cw = (inner - gap * (cols - 1)) / cols
+    f_n, f_v, f_c = _font("regular", 21), _font("bold", 30), _font("bold", 21)
+    arrows = {"up": "▲", "down": "▼", "flat": "-"}
+    for i, x_m in enumerate(mk):
+        r, c = divmod(i, cols)
+        x, yy = PAD + c * (cw + gap), y + r * 104
+        d.rounded_rectangle([x, yy, x + cw, yy + 94], radius=14, fill=CHIP_BG)
+        d.text((x + 14, yy + 8), x_m["name"], font=f_n, fill=SUB)
+        d.text((x + 14, yy + 34), _fit(d, x_m["text"], f_v, cw * 0.62), font=f_v, fill=TEXT)
+        color = UP if x_m["direction"] == "up" else DOWN if x_m["direction"] == "down" else SUB
+        d.text((x + cw - 12, yy + 50), f"{arrows[x_m['direction']]}{x_m['change']}", font=f_c, fill=color,
+               anchor="rm")
+    y += ((len(mk) + cols - 1) // cols) * 104 + 6
+
+    # 야간선물
+    f_txt = _font("regular", 25)
+    d.rounded_rectangle([PAD, y, W - PAD, y + 56], radius=14, fill=(255, 247, 237))
+    d.text((PAD + 18, y + 28), "야간선물", font=_font("bold", 24), fill=(194, 65, 12), anchor="lm")
+    d.text((PAD + 140, y + 28), _fit(d, m["night_futures"], f_txt, inner - 160), font=f_txt, fill=TEXT, anchor="lm")
+    y += 72
+
+    # 시초가 예상 (코스피 / 코스닥)
+    d.text((PAD, y), "시초가 예상", font=_font("bold", 28), fill=TEXT)
+    y += 44
+    f_badge, f_why = _font("bold", 28), _font("regular", 24)
+    for name, key, why in (("코스피", "kospi_open", "kospi_reason"), ("코스닥", "kosdaq_open", "kosdaq_reason")):
+        label = m[key].strip()
+        bg, fg = OPEN_STYLE.get(label, OPEN_STYLE["보합"])
+        d.text((PAD, y + 24), name, font=_font("bold", 27), fill=TEXT, anchor="lm")
+        bw = int(d.textlength(label, font=f_badge)) + 32
+        d.rounded_rectangle([PAD + 100, y + 2, PAD + 100 + bw, y + 46], radius=12, fill=bg)
+        d.text((PAD + 116, y + 24), label, font=f_badge, fill=fg, anchor="lm")
+        d.text((PAD + 116 + bw, y + 24), _fit(d, m[why], f_why, inner - 130 - bw), font=f_why, fill=SUB,
+               anchor="lm")
+        y += 58
+    y += 4
+
+    # 밤사이 변수
+    d.line([PAD, y, W - PAD, y], fill=LINE, width=2)
+    y += 14
+    d.text((PAD, y), "밤사이 주요 변수", font=_font("bold", 26), fill=TEXT)
+    y += 40
+    for t in m["overnight"][:4]:
+        d.text((PAD + 4, y), "· " + _fit(d, t, f_txt, inner - 24), font=f_txt, fill=TEXT)
+        y += 37
+    y += 8
+
+    # 강세 / 약세 섹터
+    f_sec, f_stk = _font("bold", 25), _font("regular", 22)
+    for title, calls, bg, fg in (("강세 예상", m["sectors_up"], UP_BG, UP), ("약세 예상", m["sectors_down"], DOWN_BG, DOWN)):
+        calls = calls[:3]
+        if not calls:
+            continue
+        box_h = 50 + len(calls) * 66
+        d.rounded_rectangle([PAD, y, W - PAD, y + box_h], radius=16, fill=bg)
+        d.text((PAD + 18, y + 12), ("▲ " if fg == UP else "▼ ") + title, font=_font("bold", 25), fill=fg)
+        yy = y + 50
+        for c in calls:
+            d.text((PAD + 18, yy), c["sector"], font=f_sec, fill=TEXT)
+            d.text((PAD + 150, yy + 2), _fit(d, c["reason"], f_stk, inner - 170), font=f_stk, fill=SUB)
+            stocks = ", ".join(c["stocks"][:3])
+            if stocks:
+                d.text((PAD + 150, yy + 31), _fit(d, stocks, f_stk, inner - 170), font=_font("bold", 22), fill=fg)
+            yy += 66
+        y += box_h + 12
+
+    # 이벤트
+    if m["events"]:
+        d.text((PAD, y), "이벤트", font=_font("bold", 25), fill=TEXT)
+        d.text((PAD + 100, y + 2), _fit(d, " · ".join(m["events"][:3]), f_stk, inner - 100), font=f_stk, fill=TEXT)
+        y += 40
+
+    # 안내 문구
+    d.text((W // 2, y + 14), "AI가 기사로 예상한 내용이며 투자 권유가 아닙니다", font=_font("regular", 20),
+           fill=SUB, anchor="mm")
+    bottom = min(1500, y + 40)
+    img = img.crop((0, 0, W, bottom))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(path, "PNG", optimize=True)
+    return bottom

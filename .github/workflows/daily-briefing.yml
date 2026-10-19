@@ -2,9 +2,9 @@ name: 아침 뉴스 브리핑
 
 on:
   schedule:
-    # GitHub 시간은 UTC 기준입니다. 21:30 UTC = 한국시간 06:30
+    # GitHub 시간은 UTC 기준입니다. 21:15 UTC = 한국시간 06:15
     # (GitHub 예약 실행은 늦어질 수 있어 미리 시작하고, 07:00까지 기다렸다가 발송합니다)
-    - cron: "30 21 * * *"
+    - cron: "15 21 * * *"
   workflow_dispatch:
     inputs:
       send_now:

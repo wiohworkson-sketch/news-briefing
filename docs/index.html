@@ -78,6 +78,19 @@ button{cursor:pointer}
 .toc{display:flex;gap:6px;overflow-x:auto;padding:4px 0 2px;margin-top:12px}
 .toc a{flex:none;font-size:15px;text-decoration:none;padding:5px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
 footer{color:var(--muted);font-size:12px;text-align:center;margin-top:30px}
+.mkt .nf{background:var(--soft);border-radius:10px;padding:8px 12px;font-size:16px;margin-bottom:10px}
+.mkt .op{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:16px}
+.mkt .op b{min-width:52px;font-size:17px}
+.badge{padding:3px 10px;border-radius:8px;font-weight:700;font-size:16px;white-space:nowrap}
+.b-갭상승{background:#dc2626;color:#fff}.b-강보합{background:#fee2e2;color:#b91c1c}.b-보합{background:#e5e7eb;color:#374151}
+.b-약보합{background:#dbeafe;color:#1d4ed8}.b-갭하락{background:#2563eb;color:#fff}
+.mkt h3{font-size:17px;margin:14px 0 6px}
+.mkt ul{margin:0;padding-left:18px;font-size:16px}
+.sc2{border-radius:12px;padding:10px 12px;margin-top:8px}
+.sc2.up{background:color-mix(in srgb,var(--up) 10%,transparent)}.sc2.dn{background:color-mix(in srgb,var(--down) 10%,transparent)}
+.sc2 .r{display:grid;grid-template-columns:80px 1fr;gap:6px;padding:4px 0;font-size:15.5px}
+.sc2 .st{font-weight:700}.sc2.up .st{color:var(--up)}.sc2.dn .st{color:var(--down)}
+.warn{font-size:12.5px;color:var(--muted);margin-top:10px}
 </style>
 </head>
 <body>
@@ -118,7 +131,19 @@ function render(page){
   <div class="grid">${page.markets.map(m => `<div class="m"><div class="n">${esc(m.name)}</div><div class="v">${esc(m.text)}</div>
     <div class="c ${m.direction}">${arrow[m.direction]} ${esc(m.change)}</div></div>`).join("")}</div>
   <div class="mc">${esc(b.market_comment)}</div>
-  <nav class="toc"><a href="#top3">핵심</a><a href="#insight">시사점</a>${b.sections.map((s,i)=>`<a href="#sec-${i}">${esc(s.name)}</a>`).join("")}<a href="#views">국내vs외신</a><a href="#sched">일정</a><a href="#kw">키워드</a></nav>
+  <nav class="toc">${b.market ? '<a href="#market">장 전망</a>' : ""}<a href="#top3">핵심</a><a href="#insight">시사점</a>${b.sections.map((s,i)=>`<a href="#sec-${i}">${esc(s.name)}</a>`).join("")}<a href="#views">국내vs외신</a><a href="#sched">일정</a><a href="#kw">키워드</a></nav>
+  ${b.market ? (() => { const m = b.market;
+    const calls = (arr, cls, title) => arr && arr.length ? `<div class="sc2 ${cls}"><b>${title}</b>${arr.map(c=>`<div class="r"><b>${esc(c.sector)}</b><span>${esc(c.reason)}${c.stocks.length?`<br><span class="st">${c.stocks.map(esc).join(", ")}</span>`:""}</span></div>`).join("")}</div>` : "";
+    const op = (n, v, r) => `<div class="op"><b>${n}</b><span class="badge b-${esc(v)}">${esc(v)}</span><span>${esc(r)}</span></div>`;
+    return `<section class="card mkt" id="market"><h2>📊 오늘 장 전망</h2>
+    <div class="grid" style="margin-top:0">${(page.outlook_markets||[]).map(x => `<div class="m"><div class="n">${esc(x.name)}</div><div class="v">${esc(x.text)}</div><div class="c ${x.direction}">${arrow[x.direction]} ${esc(x.change)}</div></div>`).join("")}</div>
+    <div class="nf" style="margin-top:10px">🌙 <b>야간선물</b> ${esc(m.night_futures)}</div>
+    <h3>시초가 예상</h3>${op("코스피", m.kospi_open, m.kospi_reason)}${op("코스닥", m.kosdaq_open, m.kosdaq_reason)}
+    <h3>밤사이 주요 변수</h3><ul>${m.overnight.map(o=>`<li>${esc(o)}</li>`).join("")}</ul>
+    ${calls(m.sectors_up, "up", "▲ 강세 예상")}${calls(m.sectors_down, "dn", "▼ 약세 예상")}
+    ${m.events.length ? `<h3>이벤트</h3><ul>${m.events.map(e=>`<li>${esc(e)}</li>`).join("")}</ul>` : ""}
+    ${sources(page, m.article_ids)}
+    <div class="warn">AI가 기사로 예상한 내용이며 투자 권유가 아닙니다. 투자 판단은 본인 책임입니다.</div></section>`; })() : ""}
   <section class="card" id="top3"><h2>🔥 오늘의 핵심</h2><ul class="hl">${b.headlines.map(h=>`<li>${esc(h)}</li>`).join("")}</ul></section>
   <section class="card ins" id="insight"><h2>💡 오늘의 시사점</h2>
     ${b.insight_easy ? `<div class="easy"><div class="et">🧒 쉽게 풀어보기</div>

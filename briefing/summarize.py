@@ -43,7 +43,27 @@ class EasyInsight(BaseModel):
     result: str = Field(description="그래서 어떻게 되나: 앞으로 예상되는 결과, 40자 이내")
 
 
+class SectorCall(BaseModel):
+    sector: str = Field(description="섹터 이름, 8자 이내 (예: 반도체, 2차전지, 로봇, 원전, 조선, 방산, 바이오, 자동차)")
+    reason: str = Field(description="그렇게 보는 이유 한 줄, 25자 이내")
+    stocks: list[str] = Field(description="관련 종목 1~3개. 기사에 이름이 나온 국내 상장 종목만")
+
+
+class MarketOutlook(BaseModel):
+    night_futures: str = Field(description="전일 코스피200 야간선물 결과 한 줄(등락률 포함, 30자 이내). 기사에 없으면 '야간선물 기사 없음'")
+    overnight: list[str] = Field(description="밤사이 주요 변수 3~5개: 미국 증시, 전쟁·지정학, 유가, 금리·CPI 등 발표. 각 30자 이내")
+    kospi_open: str = Field(description="코스피 시초가 예상: 갭상승 / 강보합 / 보합 / 약보합 / 갭하락 중 하나")
+    kospi_reason: str = Field(description="코스피 시초가 예상 근거, 35자 이내")
+    kosdaq_open: str = Field(description="코스닥 시초가 예상: 갭상승 / 강보합 / 보합 / 약보합 / 갭하락 중 하나")
+    kosdaq_reason: str = Field(description="코스닥 시초가 예상 근거, 35자 이내")
+    sectors_up: list[SectorCall] = Field(description="오늘 강세가 예상되는 섹터 2~3개")
+    sectors_down: list[SectorCall] = Field(description="오늘 약세가 예상되는 섹터 1~3개")
+    events: list[str] = Field(description="오늘·이번 주 시장 이벤트 0~4개(금리결정, CPI, 실적, 선물옵션 만기 등), 각 25자 이내")
+    article_ids: list[int] = Field(description="근거 기사 번호")
+
+
 class Briefing(BaseModel):
+    market: MarketOutlook = Field(description="오늘 국내 증시 장 전망")
     headlines: list[str] = Field(description="오늘의 핵심 3개, 각 25자 이내")
     insight: list[str] = Field(description="오늘의 시사점 3줄. 여러 뉴스를 엮어 '그래서 무엇이 중요한가'")
     insight_easy: EasyInsight = Field(description="오늘 가장 중요한 흐름을 초등학생도 이해하게 풀어쓴 설명")
@@ -69,17 +89,33 @@ SYSTEM = """당신은 한국 독자를 위한 아침 뉴스 브리핑 편집장�
 FALLBACK_MODELS = ["gemini-3.6-flash", "gemini-3.5-flash-lite"]
 
 
-def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg: dict) -> Briefing:
+def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg: dict,
+                  outlook_markets: list[dict] | None = None, expiry_note: str = "") -> Briefing:
     client = genai.Client()  # GEMINI_API_KEY 환경변수 사용
     lines = [
         f"[{a['id']}] ({a['source']}|{a['origin']}) {a['title']} — {a['summary']}"
         for a in articles
     ]
-    market_lines = [
-        f"{m['name']}: {m['text']} ({'▲' if m['direction'] == 'up' else '▼' if m['direction'] == 'down' else '-'}{m['change']})"
-        for m in markets
-    ]
+    fmt = lambda m: (f"{m['name']}: {m['text']} "
+                     f"({'▲' if m['direction'] == 'up' else '▼' if m['direction'] == 'down' else '-'}{m['change']})")
+    market_lines = [fmt(m) for m in markets]
+    outlook_lines = [fmt(m) for m in (outlook_markets or [])]
     prompt = f"""오늘은 {date_str}입니다. 아래 자료로 아침 브리핑을 만드세요.
+
+## 오늘 장 전망(market) 작성 규칙 — 가장 중요
+- 기사 목록의 야간선물·뉴욕증시 마감·증시 전망·특징주 기사와 아래 '밤사이 시장' 숫자를 근거로 씁니다.
+- night_futures: 전일 코스피200 야간선물 결과를 기사에서 찾아 등락률과 함께 씁니다. 기사에 없으면 지어내지 말고 '야간선물 기사 없음'.
+- overnight: 밤사이 미국 증시, 전쟁·지정학, 유가, 금리 결정·CPI 등 발표 중 오늘 국내 증시에 영향이 큰 것만.
+- kospi_open / kosdaq_open: 위 근거를 종합해 갭상승 / 강보합 / 보합 / 약보합 / 갭하락 중 하나로 예상합니다.
+  (참고: 미국 반도체지수·나스닥·한국 ETF(EWY) 등락이 국내 시초가와 관련이 큽니다.)
+- sectors_up / sectors_down: 반도체, 2차전지, 로봇, 원전, 조선, 방산, 바이오, 자동차 등에서 고르고,
+  종목(stocks)은 반드시 기사에 이름이 나온 국내 상장 종목만 씁니다. 근거 없으면 빈 목록으로 둡니다.
+- events: 아래 '선물·옵션 만기' 정보와 기사 속 금리 결정·CPI·실적 발표 일정을 넣습니다.
+- 확정된 사실처럼 쓰지 말고 '예상'임이 드러나게 씁니다.
+
+## 밤사이 시장 (전일 대비)
+{chr(10).join(outlook_lines) or "(데이터 없음)"}
+선물·옵션 만기: {expiry_note or "정보 없음"}
 
 ## 작성 규칙
 - 분야(sections)는 정확히 이 순서와 이름으로: {", ".join(cfg["sections"])}

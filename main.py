@@ -51,7 +51,10 @@ def cmd_build() -> None:
         raise RuntimeError("수집된 기사가 너무 적습니다. 뉴스 출처 주소를 확인하세요.")
 
     mk = markets.fetch(cfg)
-    b = summarize.make_briefing(articles, mk, f"{now.year}년 {date_label}", cfg).model_dump()
+    outlook_mk = markets.fetch(cfg, "outlook_markets")
+    expiry = markets.option_expiry_note(now.date())
+    b = summarize.make_briefing(articles, mk, f"{now.year}년 {date_label}", cfg,
+                                outlook_mk, expiry).model_dump()
 
     used = set()
     for sec in b["sections"]:
@@ -62,6 +65,7 @@ def cmd_build() -> None:
             used.update(it["article_ids"])
     for p in b["perspectives"]:
         used.update(p["article_ids"])
+    used.update(b["market"]["article_ids"])
     by_id = {a["id"]: a for a in articles}
     page = {
         "date": date,
@@ -69,6 +73,7 @@ def cmd_build() -> None:
         "generated_at": now.strftime("%H:%M"),
         "article_count": len(articles),
         "markets": mk,
+        "outlook_markets": outlook_mk,
         "briefing": b,
         "articles": {str(i): {k: by_id[i][k] for k in ("title", "url", "source", "origin")}
                      for i in sorted(used) if i in by_id},
@@ -77,10 +82,13 @@ def cmd_build() -> None:
         from briefing import image
         page["image"] = f"img/{date}-{now.strftime('%H%M')}.png"
         page["image_height"] = image.render(page, ROOT / "docs" / page["image"])
+        page["market_image"] = f"img/{date}-{now.strftime('%H%M')}-market.png"
+        page["market_image_height"] = image.render_market(page, ROOT / "docs" / page["market_image"])
     except Exception as e:
         print(f"[경고] 카드 이미지 생성 실패: {e}")
         page.pop("image", None)
         page.pop("image_height", None)
+        page.pop("market_image", None)
     publish.save(page, date)
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(page, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -100,7 +108,8 @@ def cmd_send(at: str | None) -> None:
             time.sleep(wait)
     base = os.environ.get("PAGES_URL", "").rstrip("/")
     image_url = f"{base}/{page['image']}" if page.get("image") else None
-    kakao.send_briefing(page, pages_url(page["date"]), image_url)
+    market_url = f"{base}/{page['market_image']}" if page.get("market_image") else None
+    kakao.send_briefing(page, pages_url(page["date"]), image_url, market_url)
     print("[완료] 카톡 발송")
 
 

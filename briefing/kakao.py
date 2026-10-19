@@ -166,8 +166,30 @@ def _wait_for(image_url: str, timeout: int = 420) -> bool:
     return False
 
 
-def send_briefing(page: dict, url: str, image_url: str | None = None) -> None:
+def build_market_message(page: dict, url: str, image_url: str) -> dict:
+    """오늘 장 전망 카드 (시초가 예상을 제목에)."""
+    m = page["briefing"]["market"]
+    link = {"web_url": url + "#market", "mobile_web_url": url + "#market"}
+    full = {"web_url": url, "mobile_web_url": url}
+    return {
+        "object_type": "feed",
+        "content": {
+            "title": f"📊 시초가 예상 · 코스피 {m['kospi_open']} / 코스닥 {m['kosdaq_open']}",
+            "description": _cut(m["night_futures"], 40),
+            "image_url": image_url,
+            "image_width": 900,
+            "image_height": page.get("market_image_height", 1300),
+            "link": link,
+        },
+        "buttons": [{"title": "장 전망 자세히", "link": link}, {"title": "전체 브리핑", "link": full}],
+    }
+
+
+def send_briefing(page: dict, url: str, image_url: str | None = None, market_url: str | None = None) -> None:
     token = access_token()
+    if market_url and page["briefing"].get("market") and _wait_for(market_url):
+        send(build_market_message(page, url, market_url), token)
+        time.sleep(0.5)
     if image_url and _wait_for(image_url):
         send(build_image_message(page, url, image_url), token)
         return
