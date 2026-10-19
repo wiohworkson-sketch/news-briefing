@@ -83,7 +83,25 @@ def _cut(s: str, n: int) -> str:
     return s if len(s) <= n else s[: n - 1] + "…"
 
 
+def build_image_message(page: dict, url: str, image_url: str) -> dict:
+    """큰 이미지 카드 1장 (카톡에서 화면 가득 보임)."""
+    link = {"web_url": url, "mobile_web_url": url}
+    return {
+        "object_type": "feed",
+        "content": {
+            "title": f"☀️ {page['date_label']} 아침 브리핑",
+            "description": _cut(page["briefing"]["headlines"][0], 40) if page["briefing"]["headlines"] else "",
+            "image_url": image_url,
+            "image_width": 900,
+            "image_height": 1200,
+            "link": link,
+        },
+        "buttons": [{"title": "전체 브리핑 보기", "link": link}],
+    }
+
+
 def build_messages(page: dict, url: str) -> list[dict]:
+    """(예전 방식) 글자 카드 여러 개. 이미지를 만들 수 없을 때 대신 사용."""
     b = page["briefing"]
     link = lambda anchor="": {"web_url": url + anchor, "mobile_web_url": url + anchor}
     msgs = []
@@ -130,8 +148,25 @@ def build_messages(page: dict, url: str) -> list[dict]:
     return msgs
 
 
-def send_briefing(page: dict, url: str) -> None:
+def _wait_for(image_url: str, timeout: int = 420) -> bool:
+    """웹페이지에 이미지가 올라올 때까지 기다린다 (GitHub 게시에 1~3분 소요)."""
+    end = time.time() + timeout
+    while time.time() < end:
+        try:
+            if requests.head(image_url, timeout=10).status_code == 200:
+                return True
+        except requests.RequestException:
+            pass
+        time.sleep(15)
+    return False
+
+
+def send_briefing(page: dict, url: str, image_url: str | None = None) -> None:
     token = access_token()
+    if image_url and _wait_for(image_url):
+        send(build_image_message(page, url, image_url), token)
+        return
+    print("[경고] 이미지를 사용할 수 없어 글자 카드로 보냅니다.")
     for i, msg in enumerate(build_messages(page, url)):
         try:
             send(msg, token)

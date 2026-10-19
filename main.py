@@ -73,6 +73,13 @@ def cmd_build() -> None:
         "articles": {str(i): {k: by_id[i][k] for k in ("title", "url", "source", "origin")}
                      for i in sorted(used) if i in by_id},
     }
+    try:  # 카톡용 큰 카드 이미지 (실행마다 새 이름 → 카톡 캐시 방지)
+        from briefing import image
+        page["image"] = f"img/{date}-{now.strftime('%H%M')}.png"
+        image.render(page, ROOT / "docs" / page["image"])
+    except Exception as e:
+        print(f"[경고] 카드 이미지 생성 실패: {e}")
+        page.pop("image", None)
     publish.save(page, date)
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(page, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -90,7 +97,9 @@ def cmd_send(at: str | None) -> None:
         if 0 < wait < 3 * 3600:
             print(f"[정보] {at}까지 {int(wait // 60)}분 대기합니다.")
             time.sleep(wait)
-    kakao.send_briefing(page, pages_url(page["date"]))
+    base = os.environ.get("PAGES_URL", "").rstrip("/")
+    image_url = f"{base}/{page['image']}" if page.get("image") else None
+    kakao.send_briefing(page, pages_url(page["date"]), image_url)
     print("[완료] 카톡 발송")
 
 

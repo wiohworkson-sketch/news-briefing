@@ -6,3 +6,4 @@ yfinance
 curl_cffi
 pyyaml
 cryptography
+pillow
