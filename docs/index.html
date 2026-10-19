@@ -49,6 +49,9 @@ button{cursor:pointer}
 .easy .et{font-weight:700;font-size:16px;margin-bottom:6px;color:var(--accent)}
 .easy .er{display:grid;grid-template-columns:92px 1fr;gap:8px;font-size:17px;padding:4px 0}
 .easy .er b{color:var(--accent)}
+.easy .er.sub{border-top:1px solid var(--line);margin-top:4px;padding-top:8px}
+.easy .er.sub b{color:var(--c2)}
+.easy .er.sub + .er.sub{border-top:none;margin-top:0;padding-top:4px}
 .item{padding:10px 0;border-top:1px solid var(--line)}
 .item:first-of-type{border-top:none;padding-top:2px}
 .item h3{font-size:19px;margin:0 0 3px;font-weight:700}
@@ -88,7 +91,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin-top:30px}
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const ICONS = ["📈","🌏","💻","🏙️","📰","📰"];
+const ICONS = {"증시·경제":"📈","정치·국제":"🌏","IT·AI":"💻","바이오·제약":"💊","사회·생활":"🏙️"};
 let dates = [];
 
 async function getJSON(p){ const r = await fetch(p, {cache:"no-store"}); if(!r.ok) throw new Error(p); return r.json(); }
@@ -121,9 +124,11 @@ function render(page){
     ${b.insight_easy ? `<div class="easy"><div class="et">🧒 쉽게 풀어보기</div>
       <div class="er"><b>무슨 일?</b><span>${esc(b.insight_easy.what)}</span></div>
       <div class="er"><b>어떤 영향?</b><span>${esc(b.insight_easy.impact)}</span></div>
-      <div class="er"><b>그래서?</b><span>${esc(b.insight_easy.result)}</span></div></div>` : ""}
+      <div class="er"><b>그래서?</b><span>${esc(b.insight_easy.result)}</span></div>
+      ${b.insight_it ? `<div class="er sub"><b>IT·AI</b><span>${esc(b.insight_it)}</span></div>` : ""}
+      ${b.insight_market ? `<div class="er sub"><b>증시</b><span>${esc(b.insight_market)}</span></div>` : ""}</div>` : ""}
     ${b.insight.map(t=>`<p>▸ ${esc(t)}</p>`).join("")}</section>
-  ${b.sections.map((s,i)=>`<section class="card" id="sec-${i}"><h2><span class="dot" style="background:var(--c${i%6})"></span>${ICONS[i%6]} ${esc(s.name)}</h2>
+  ${b.sections.map((s,i)=>`<section class="card" id="sec-${i}"><h2><span class="dot" style="background:var(--c${i%6})"></span>${ICONS[s.name] || "📰"} ${esc(s.name)}</h2>
     ${s.items.map(it=>item(page,it)).join("")}</section>`).join("")}
   <section class="card" id="views"><h2>🔍 국내 vs 외신 시각</h2>${b.perspectives.map(p=>`<div class="pv"><b>${esc(p.topic)}</b>
     <div><span class="tag kr">국내</span>${esc(p.domestic)}</div><div><span class="tag fx">외신</span>${esc(p.foreign)}</div>${sources(page,p.article_ids)}</div>`).join("")}</section>

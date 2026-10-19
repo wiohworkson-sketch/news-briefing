@@ -23,6 +23,7 @@ sections:
   - 증시·경제
   - 정치·국제
   - IT·AI
+  - 바이오·제약
   - 사회·생활
 
 # 시장 지표 (이름은 6글자 이내, scale: 곱할 값 — 예: 100엔당 원화)
@@ -50,6 +51,8 @@ feeds:
   - { name: 매일경제, origin: 국내, url: "https://www.mk.co.kr/rss/30100041/" }
   - { name: 매일경제, origin: 국내, url: "https://www.mk.co.kr/rss/50200011/" }
   - { name: 전자신문, origin: 국내, url: "https://rss.etnews.com/Section901.xml" }
+  # 바이오·제약 (구글 뉴스 검색)
+  - { name: 바이오뉴스, origin: 국내, url: "https://news.google.com/rss/search?q=%EB%B0%94%EC%9D%B4%EC%98%A4+OR+%EC%A0%9C%EC%95%BD+when:1d&hl=ko&gl=KR&ceid=KR:ko" }
   # ---- 외신 ----
   - { name: CNBC, origin: 외신, url: "https://www.cnbc.com/id/100003114/device/rss/rss.html" }
   - { name: CNBC, origin: 외신, url: "https://www.cnbc.com/id/20910258/device/rss/rss.html" }
@@ -65,6 +68,7 @@ feeds:
   - { name: Nikkei Asia, origin: 외신, url: "https://asia.nikkei.com/rss/feed/nar" }
   # 로이터·외신의 한국 관련 보도 (구글 뉴스 경유)
   - { name: Reuters, origin: 외신, url: "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en" }
+  - { name: 외신(바이오), origin: 외신, url: "https://news.google.com/rss/search?q=biotech+OR+pharma+OR+FDA+when:1d&hl=en-US&gl=US&ceid=US:en" }
   - { name: 외신(한국 관련), origin: 외신, url: "https://news.google.com/rss/search?q=%22South+Korea%22+when:1d&hl=en-US&gl=US&ceid=US:en" }
 
 # 피드 하나에서 가져올 최대 기사 수 / 최근 몇 시간 기사까지 볼지
