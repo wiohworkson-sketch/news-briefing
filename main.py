@@ -76,10 +76,11 @@ def cmd_build() -> None:
     try:  # 카톡용 큰 카드 이미지 (실행마다 새 이름 → 카톡 캐시 방지)
         from briefing import image
         page["image"] = f"img/{date}-{now.strftime('%H%M')}.png"
-        image.render(page, ROOT / "docs" / page["image"])
+        page["image_height"] = image.render(page, ROOT / "docs" / page["image"])
     except Exception as e:
         print(f"[경고] 카드 이미지 생성 실패: {e}")
         page.pop("image", None)
+        page.pop("image_height", None)
     publish.save(page, date)
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(page, ensure_ascii=False, indent=1), encoding="utf-8")

@@ -62,7 +62,8 @@ def _wrap(d: ImageDraw.ImageDraw, text: str, font, max_w: float, max_lines: int)
     return [l for l in lines if l]
 
 
-def render(page: dict, path: Path) -> None:
+def render(page: dict, path: Path) -> int:
+    """이미지를 저장하고 실제 높이(px)를 돌려준다."""
     b = page["briefing"]
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
@@ -156,5 +157,9 @@ def render(page: dict, path: Path) -> None:
         yy += 12
         draw_rows(w_extra, (5, 150, 105))
 
+    # 내용이 끝나는 곳까지만 남겨 아래 빈 공간을 없앤다
+    bottom = min(H, y + box_h + 28)
+    img = img.crop((0, 0, W, bottom))
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path, "PNG", optimize=True)
+    return bottom

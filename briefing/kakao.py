@@ -95,7 +95,7 @@ def build_image_message(page: dict, url: str, image_url: str) -> dict:
             "description": f"{page['date_label']} 아침 브리핑",
             "image_url": image_url,
             "image_width": 900,
-            "image_height": 1200,
+            "image_height": page.get("image_height", 1200),
             "link": link,
         },
         "buttons": [
