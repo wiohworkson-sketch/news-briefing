@@ -90,7 +90,8 @@ FALLBACK_MODELS = ["gemini-3.6-flash", "gemini-3.5-flash-lite"]
 
 
 def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg: dict,
-                  outlook_markets: list[dict] | None = None, expiry_note: str = "") -> Briefing:
+                  outlook_markets: list[dict] | None = None, expiry_note: str = "",
+                  night_lines: list[str] | None = None) -> Briefing:
     client = genai.Client()  # GEMINI_API_KEY 환경변수 사용
     lines = [
         f"[{a['id']}] ({a['source']}|{a['origin']}) {a['title']} — {a['summary']}"
@@ -104,7 +105,8 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
 
 ## 오늘 장 전망(market) 작성 규칙 — 가장 중요
 - 기사 목록의 야간선물·뉴욕증시 마감·증시 전망·특징주 기사와 아래 '밤사이 시장' 숫자를 근거로 씁니다.
-- night_futures: 전일 코스피200 야간선물 결과를 기사에서 찾아 등락률과 함께 씁니다. 기사에 없으면 지어내지 말고 '야간선물 기사 없음'.
+- night_futures: 아래 '야간선물 관련 기사 문장'(최신 문장 우선)과 기사 목록에서 간밤 코스피200 야간선물 결과를 찾아
+  등락률과 함께 씁니다(예: "코스피200 야간선물 0.13% 하락"). 근거가 없으면 지어내지 말고 '야간선물 기사 없음'.
 - overnight: 밤사이 미국 증시, 전쟁·지정학, 유가, 금리 결정·CPI 등 발표 중 오늘 국내 증시에 영향이 큰 것만.
 - kospi_open / kosdaq_open: 위 근거를 종합해 갭상승 / 강보합 / 보합 / 약보합 / 갭하락 중 하나로 예상합니다.
   (참고: 미국 반도체지수·나스닥·한국 ETF(EWY) 등락이 국내 시초가와 관련이 큽니다.)
@@ -116,6 +118,9 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
 ## 밤사이 시장 (전일 대비)
 {chr(10).join(outlook_lines) or "(데이터 없음)"}
 선물·옵션 만기: {expiry_note or "정보 없음"}
+
+## 야간선물 관련 기사 문장 (최신순 — 첫 문장이 가장 최근, 날짜가 지난 문장은 무시)
+{chr(10).join("- " + s for s in (night_lines or [])) or "(없음)"}
 
 ## 작성 규칙
 - 분야(sections)는 정확히 이 순서와 이름으로: {", ".join(cfg["sections"])}

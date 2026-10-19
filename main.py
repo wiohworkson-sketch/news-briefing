@@ -53,8 +53,11 @@ def cmd_build() -> None:
     mk = markets.fetch(cfg)
     outlook_mk = markets.fetch(cfg, "outlook_markets")
     expiry = markets.option_expiry_note(now.date())
+    from briefing import naver
+    night = naver.night_futures()
+    print(f"[정보] 야간선물 기사 문장 {len(night)}개")
     b = summarize.make_briefing(articles, mk, f"{now.year}년 {date_label}", cfg,
-                                outlook_mk, expiry).model_dump()
+                                outlook_mk, expiry, night).model_dump()
 
     used = set()
     for sec in b["sections"]:
