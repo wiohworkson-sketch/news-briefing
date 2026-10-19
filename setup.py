@@ -8,6 +8,7 @@ import getpass
 import http.server
 import os
 import secrets
+import shutil
 import subprocess
 import sys
 import threading
@@ -16,6 +17,7 @@ import webbrowser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+GH = shutil.which("gh") or r"C:\Program Files\GitHub CLI\gh.exe"
 PORT = 5678
 REDIRECT = f"http://localhost:{PORT}/kakao"
 
@@ -29,7 +31,7 @@ def ask(label: str, hidden: bool = True) -> str:
 
 
 def gh_secret(name: str, value: str) -> None:
-    subprocess.run(["gh", "secret", "set", name], input=value.encode(), check=True,
+    subprocess.run([GH, "secret", "set", name], input=value.encode(), check=True,
                    stdout=subprocess.DEVNULL)
 
 
@@ -97,7 +99,7 @@ def main() -> None:
     from briefing import kakao
     kakao.exchange_code(kakao_login(rest_key), REDIRECT)
 
-    pages = subprocess.run(["gh", "repo", "view", "--json", "owner,name", "-q",
+    pages = subprocess.run([GH, "repo", "view", "--json", "owner,name", "-q",
                             '"https://" + .owner.login + ".github.io/" + .name + "/"'],
                            capture_output=True, text=True, check=True).stdout.strip()
     values["PAGES_URL"] = pages
