@@ -43,23 +43,32 @@ def _fit(d: ImageDraw.ImageDraw, text: str, font, max_w: float) -> str:
 
 
 def _wrap(d: ImageDraw.ImageDraw, text: str, font, max_w: float, max_lines: int) -> list[str]:
-    """글자 단위로 줄바꿈 (마지막 줄은 넘치면 … 처리)."""
-    lines, cur, truncated = [], "", False
-    for i, ch in enumerate(text):
-        # 문장부호는 줄 끝에 붙여서 혼자 다음 줄로 넘어가지 않게 한다
-        if d.textlength(cur + ch, font=font) > max_w and ch not in ".,!?…)'\"":
+    """띄어쓰기(단어) 단위로 줄바꿈. 한 단어가 너무 길 때만 글자 단위로 자른다."""
+    words = text.split()
+    lines, cur = [], ""
+    i = 0
+    while i < len(words):
+        w = words[i]
+        cand = f"{cur} {w}" if cur else w
+        if d.textlength(cand, font=font) <= max_w:
+            cur, i = cand, i + 1
+        elif cur:
             lines.append(cur)
-            cur = ch.lstrip()
-            if len(lines) == max_lines:
-                truncated = bool(text[i:].strip())  # 남은 글자가 있을 때만 … 표시
-                break
-        else:
-            cur += ch
-    else:
+            cur = ""
+        else:  # 단어 하나가 한 줄보다 긴 경우
+            cut = len(w)
+            while cut > 1 and d.textlength(w[:cut], font=font) > max_w:
+                cut -= 1
+            lines.append(w[:cut])
+            words[i] = w[cut:]
+        if len(lines) == max_lines:
+            break
+    if cur and len(lines) < max_lines:
         lines.append(cur)
-    if truncated:
+        cur = ""
+    if (i < len(words) or cur) and lines:  # 남은 글자가 있으면 … 표시
         lines[-1] = _fit(d, lines[-1] + "…", font, max_w)
-    return [l for l in lines if l]
+    return lines
 
 
 def render(page: dict, path: Path) -> int:
