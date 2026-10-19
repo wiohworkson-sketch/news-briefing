@@ -9,7 +9,7 @@
 model: gemini-3.8-flash
 
 # 분야별로 담을 뉴스 개수
-items_per_section: 4
+items_per_section: 3
 
 # 관심 키워드 (원하는 만큼 추가/삭제)
 keywords:

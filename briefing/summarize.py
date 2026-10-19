@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 class Item(BaseModel):
     title: str = Field(description="웹페이지용 한국어 제목, 40자 이내")
-    summary: str = Field(description="핵심을 1~2문장 개조식으로. 왜 중요한지 포함")
+    summary: str = Field(description="핵심을 짧은 개조식 1문장으로, 휴대폰 2줄(약 45자) 이내. 왜 중요한지 포함")
     kakao_title: str = Field(description="카톡용 초간단 제목, 공백 포함 20자 이내")
     kakao_desc: str = Field(description="카톡용 한 줄 부연, 공백 포함 22자 이내")
     article_ids: list[int] = Field(description="근거 기사 번호 목록 (입력의 [번호])")
@@ -83,7 +83,7 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
 
 ## 작성 규칙
 - 분야(sections)는 정확히 이 순서와 이름으로: {", ".join(cfg["sections"])}
-- 분야별 항목은 {cfg.get("items_per_section", 4)}개 내외, 중요한 순서대로.
+- 분야별 항목은 정확히 {cfg.get("items_per_section", 3)}개, 중요한 순서대로.
 - 국내 뉴스를 중심으로 하되 미국 등 외신의 중요한 뉴스도 반드시 포함하세요.
 - 관심 키워드(keywords)는 정확히 이 순서로: {", ".join(cfg["keywords"])} — 관련 뉴스가 없으면 items를 빈 목록으로.
 - 쉬운 시사점(insight_easy)은 초등학생도 이해할 수 있게 쓰세요. 어려운 경제·정치 용어는 쓰지 말고 풀어서 말하고,

@@ -55,7 +55,7 @@ button{cursor:pointer}
 .item{padding:10px 0;border-top:1px solid var(--line)}
 .item:first-of-type{border-top:none;padding-top:2px}
 .item h3{font-size:19px;margin:0 0 3px;font-weight:700}
-.item p{margin:0 0 4px;font-size:17px;color:var(--sub)}
+.item p{margin:0 0 4px;font-size:17px;color:var(--sub);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .src{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .src a{font-size:13px;text-decoration:none;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--sub)}
 .tag{font-size:11px;padding:1px 6px;border-radius:6px;margin-right:4px;font-weight:500}
@@ -129,7 +129,7 @@ function render(page){
       ${b.insight_market ? `<div class="er sub"><b>증시</b><span>${esc(b.insight_market)}</span></div>` : ""}</div>` : ""}
     ${b.insight.map(t=>`<p>▸ ${esc(t)}</p>`).join("")}</section>
   ${b.sections.map((s,i)=>`<section class="card" id="sec-${i}"><h2><span class="dot" style="background:var(--c${i%6})"></span>${ICONS[s.name] || "📰"} ${esc(s.name)}</h2>
-    ${s.items.map(it=>item(page,it)).join("")}</section>`).join("")}
+    ${s.items.slice(0,3).map(it=>item(page,it)).join("")}</section>`).join("")}
   <section class="card" id="views"><h2>🔍 국내 vs 외신 시각</h2>${b.perspectives.map(p=>`<div class="pv"><b>${esc(p.topic)}</b>
     <div><span class="tag kr">국내</span>${esc(p.domestic)}</div><div><span class="tag fx">외신</span>${esc(p.foreign)}</div>${sources(page,p.article_ids)}</div>`).join("")}</section>
   <section class="card" id="sched"><h2>📅 오늘의 일정</h2>${b.schedule.length ? b.schedule.map(s=>`<div class="sc"><span class="t">${esc(s.time)}</span><span class="r">${esc(s.region)}</span><span>${esc(s.event)}</span></div>`).join("") : '<div class="meta">확인된 일정이 없습니다.</div>'}</section>
