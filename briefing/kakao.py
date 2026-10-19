@@ -86,17 +86,22 @@ def _cut(s: str, n: int) -> str:
 def build_image_message(page: dict, url: str, image_url: str) -> dict:
     """큰 이미지 카드 1장 (카톡에서 화면 가득 보임)."""
     link = {"web_url": url, "mobile_web_url": url}
+    insight = {"web_url": url + "#insight", "mobile_web_url": url + "#insight"}
+    headlines = page["briefing"]["headlines"]
     return {
         "object_type": "feed",
         "content": {
-            "title": f"☀️ {page['date_label']} 아침 브리핑",
-            "description": _cut(page["briefing"]["headlines"][0], 40) if page["briefing"]["headlines"] else "",
+            "title": f"📰 {_cut(headlines[0], 30)}" if headlines else f"{page['date_label']} 아침 브리핑",
+            "description": f"{page['date_label']} 아침 브리핑",
             "image_url": image_url,
             "image_width": 900,
             "image_height": 1200,
             "link": link,
         },
-        "buttons": [{"title": "전체 브리핑 보기", "link": link}],
+        "buttons": [
+            {"title": "전체 브리핑", "link": link},
+            {"title": "시사점·일정", "link": insight},
+        ],
     }
 
 
