@@ -139,7 +139,7 @@ function render(page){
   <section class="card" id="sched"><h2>📅 오늘의 일정</h2>${b.schedule.length ? b.schedule.map(s=>`<div class="sc"><span class="t">${esc(s.time)}</span><span class="r">${esc(s.region)}</span><span>${esc(s.event)}</span></div>`).join("") : '<div class="meta">확인된 일정이 없습니다.</div>'}</section>
   <section class="card" id="kw"><h2>🎯 관심 키워드</h2>${b.keywords.map(k=>`<div class="kw"><h3># ${esc(k.keyword)} <span class="meta">${k.items.length}건</span></h3>
     ${k.items.length ? k.items.map(it=>item(page,it)).join("") : '<div class="none">오늘은 관련 뉴스가 없습니다.</div>'}</div>`).join("")}</section>
-  <footer>AI(Claude)가 기사를 요약했습니다. 중요한 내용은 원문을 확인하세요.<br><button id="logout" style="margin-top:8px;font-size:12px;padding:4px 10px">이 기기에서 비밀번호 잊기</button></footer>`;
+  <footer>AI(Gemini)가 기사를 요약했습니다. 중요한 내용은 원문을 확인하세요.<br><button id="logout" style="margin-top:8px;font-size:12px;padding:4px 10px">이 기기에서 비밀번호 잊기</button></footer>`;
   $("#day").onchange = e => { history.replaceState(null, "", `?d=${e.target.value}`); show(e.target.value); };
   $("#logout").onclick = () => { store.del("briefing-key"); location.reload(); };
   if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();

@@ -70,8 +70,8 @@ def main() -> None:
     print("\n=== 아침 뉴스 브리핑 최초 설정 ===")
     print("입력하는 내용은 화면에 보이지 않습니다. 붙여넣기(마우스 오른쪽 클릭) 후 Enter를 누르세요.\n")
 
-    print("[1/4] Anthropic API 키 (sk-ant-로 시작)")
-    anthropic_key = ask("API 키")
+    print("[1/4] Google Gemini 무료 키 (aistudio.google.com 에서 발급, AIza로 시작)")
+    gemini_key = ask("Gemini 키")
     print("[2/4] 카카오 앱 키 (카카오 개발자 > 내 애플리케이션 > 앱 키)")
     rest_key = ask("REST API 키")
     client_secret = ask("Client Secret 코드 (카카오 로그인 > 보안)")
@@ -84,7 +84,7 @@ def main() -> None:
 
     state_key = base64.b64encode(secrets.token_bytes(32)).decode()
     values = {
-        "ANTHROPIC_API_KEY": anthropic_key,
+        "GEMINI_API_KEY": gemini_key,
         "KAKAO_REST_KEY": rest_key,
         "KAKAO_CLIENT_SECRET": client_secret,
         "BRIEFING_PASSWORD": pw,

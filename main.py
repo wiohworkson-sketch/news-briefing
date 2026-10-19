@@ -51,8 +51,7 @@ def cmd_build() -> None:
         raise RuntimeError("수집된 기사가 너무 적습니다. 뉴스 출처 주소를 확인하세요.")
 
     mk = markets.fetch(cfg)
-    schedule = summarize.find_schedule(f"{now.year}년 {date_label}", cfg.get("model", "claude-opus-5-5"))
-    b = summarize.make_briefing(articles, mk, schedule, f"{now.year}년 {date_label}", cfg).model_dump()
+    b = summarize.make_briefing(articles, mk, f"{now.year}년 {date_label}", cfg).model_dump()
 
     used = set()
     for sec in b["sections"]:

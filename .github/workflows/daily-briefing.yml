@@ -42,7 +42,7 @@ jobs:
       - name: 뉴스 수집 및 브리핑 작성
         run: python main.py build
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           BRIEFING_PASSWORD: ${{ secrets.BRIEFING_PASSWORD }}
 
       - name: 웹페이지 게시

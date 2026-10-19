@@ -5,8 +5,8 @@
 #  - 줄 앞의 공백(들여쓰기)은 그대로 유지해야 합니다.
 # ============================================================
 
-# 브리핑을 만들 AI 모델 (claude-opus-5-5 / claude-sonnet-5-5 / claude-haiku-5-5)
-model: claude-opus-5-5
+# 브리핑을 만들 AI 모델 (Google Gemini 무료 버전)
+model: gemini-3.8-flash
 
 # 분야별로 담을 뉴스 개수
 items_per_section: 4

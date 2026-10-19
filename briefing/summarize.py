@@ -1,7 +1,8 @@
-"""Claude로 기사 목록을 브리핑으로 정리한다."""
-from typing import Literal
+"""무료 Google Gemini로 기사 목록을 브리핑으로 정리한다."""
+import time
 
-import anthropic
+from google import genai
+from google.genai import errors, types
 from pydantic import BaseModel, Field
 
 
@@ -27,7 +28,7 @@ class Perspective(BaseModel):
 
 class ScheduleItem(BaseModel):
     time: str = Field(description="한국시간 기준 'HH:MM' 또는 '종일'")
-    region: Literal["한국", "미국", "기타"]
+    region: str = Field(description="한국 / 미국 / 기타 중 하나")
     event: str = Field(description="일정 내용, 30자 이내")
 
 
@@ -43,7 +44,7 @@ class Briefing(BaseModel):
     market_comment: str = Field(description="지표 흐름 한 줄 해설, 40자 이내")
     sections: list[Section]
     perspectives: list[Perspective] = Field(description="같은 사안에 대한 국내 vs 외신 시각 비교 2~3개")
-    schedule: list[ScheduleItem] = Field(description="오늘 주목할 일정 3~6개, 시간순")
+    schedule: list[ScheduleItem] = Field(description="기사에 언급된 오늘 예정 일정 0~6개, 시간순")
     keywords: list[KeywordHit]
 
 
@@ -54,43 +55,12 @@ SYSTEM = """당신은 한국 독자를 위한 아침 뉴스 브리핑 편집장�
 - 같은 사건을 다룬 여러 기사는 하나의 항목으로 묶습니다.
 - 카톡용 글자 수 제한을 꼭 지킵니다."""
 
-
-def _client() -> anthropic.Anthropic:
-    return anthropic.Anthropic(max_retries=4)
-
-
-def find_schedule(date_str: str, model: str) -> str:
-    """웹 검색으로 오늘 일정을 찾는다. 실패하면 빈 문자열."""
-    client = _client()
-    messages = [{
-        "role": "user",
-        "content": (
-            f"오늘은 {date_str}(한국시간)입니다. 오늘 한국시간 기준으로 예정된 주요 일정을 웹에서 찾아 "
-            "목록으로만 답하세요: 한국·미국 경제지표 발표, 중앙은행 회의/발언, 주요 기업 실적 발표, "
-            "국내외 주요 정치·외교 일정. 각 줄은 'HH:MM(한국시간) | 지역 | 내용' 형식, 최대 8줄."
-        ),
-    }]
-    try:
-        for _ in range(4):  # pause_turn 이면 이어서 진행
-            resp = client.messages.create(
-                model=model,
-                max_tokens=8000,
-                output_config={"effort": "low"},
-                tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 5}],
-                messages=messages,
-            )
-            if resp.stop_reason != "pause_turn":
-                break
-            messages.append({"role": "assistant", "content": resp.content})
-        return "\n".join(b.text for b in resp.content if b.type == "text").strip()
-    except anthropic.APIError as e:
-        print(f"[경고] 일정 검색 실패: {e}")
-        return ""
+# 앞의 모델이 무료 한도 초과·장애일 때 다음 모델로 넘어감
+FALLBACK_MODELS = ["gemini-3.6-flash", "gemini-3.5-flash-lite"]
 
 
-def make_briefing(articles: list[dict], markets: list[dict], schedule_text: str,
-                  date_str: str, cfg: dict) -> Briefing:
-    client = _client()
+def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg: dict) -> Briefing:
+    client = genai.Client()  # GEMINI_API_KEY 환경변수 사용
     lines = [
         f"[{a['id']}] ({a['source']}|{a['origin']}) {a['title']} — {a['summary']}"
         for a in articles
@@ -106,33 +76,37 @@ def make_briefing(articles: list[dict], markets: list[dict], schedule_text: str,
 - 분야별 항목은 {cfg.get("items_per_section", 4)}개 내외, 중요한 순서대로.
 - 국내 뉴스를 중심으로 하되 미국 등 외신의 중요한 뉴스도 반드시 포함하세요.
 - 관심 키워드(keywords)는 정확히 이 순서로: {", ".join(cfg["keywords"])} — 관련 뉴스가 없으면 items를 빈 목록으로.
-- 일정(schedule)은 아래 '오늘의 일정 검색 결과'를 우선 참고하고, 없으면 기사에서 찾으세요. 확실하지 않으면 넣지 마세요.
+- 일정(schedule)은 기사에 '오늘' 예정으로 언급된 것만 넣으세요(경제지표 발표, 회의, 실적 발표 등). 확실하지 않으면 넣지 마세요.
 
 ## 시장 지표 (전일 대비)
 {chr(10).join(market_lines)}
 
-## 오늘의 일정 검색 결과
-{schedule_text or "(검색 결과 없음)"}
-
 ## 기사 목록 ({len(articles)}건)
 {chr(10).join(lines)}
 """
-    with client.beta.messages.stream(
-        model=cfg.get("model", "claude-opus-5-5"),
-        max_tokens=64000,
-        system=SYSTEM,
-        output_config={"effort": "medium"},
-        betas=["server-side-fallback-2026-07-01"],
-        fallbacks="default",
-        messages=[{"role": "user", "content": prompt}],
-        output_format=Briefing,
-    ) as stream:
-        final = stream.get_final_message()
-    if final.stop_reason == "refusal":
-        raise RuntimeError(f"AI가 브리핑 작성을 거절했습니다: {final.stop_details}")
-    if final.stop_reason == "max_tokens":
-        raise RuntimeError("AI 응답이 너무 길어 잘렸습니다.")
-    u = final.usage
-    cost = (u.input_tokens * 4 + u.output_tokens * 20) / 1_000_000
-    print(f"[정보] 토큰 입력 {u.input_tokens:,} / 출력 {u.output_tokens:,} (약 ${cost:.2f})")
-    return final.parsed_output
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM,
+        response_mime_type="application/json",
+        response_schema=Briefing,
+    )
+    models = [cfg.get("model", "gemini-3.8-flash")] + FALLBACK_MODELS
+    last_error = None
+    for model in models:
+        for attempt in range(3):
+            try:
+                resp = client.models.generate_content(model=model, contents=prompt, config=config)
+                result = resp.parsed or Briefing.model_validate_json(resp.text)
+                u = resp.usage_metadata
+                print(f"[정보] {model} 사용 · 토큰 입력 {u.prompt_token_count:,} / 출력 {u.candidates_token_count:,} (무료)")
+                return result
+            except errors.APIError as e:
+                last_error = e
+                print(f"[경고] {model} 오류 ({e.code}): {e.message}")
+                if e.code in (429, 500, 503):  # 한도 초과·일시 장애 → 잠시 후 재시도
+                    time.sleep(20 * (attempt + 1))
+                    continue
+                break  # 그 외 오류는 다음 모델로
+            except ValueError as e:  # 응답 형식 오류 → 재시도
+                last_error = e
+                print(f"[경고] {model} 응답 형식 오류: {e}")
+    raise RuntimeError(f"AI 브리핑 작성 실패: {last_error}")
