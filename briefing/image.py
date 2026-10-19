@@ -43,20 +43,20 @@ def _fit(d: ImageDraw.ImageDraw, text: str, font, max_w: float) -> str:
 
 def _wrap(d: ImageDraw.ImageDraw, text: str, font, max_w: float, max_lines: int) -> list[str]:
     """글자 단위로 줄바꿈 (마지막 줄은 넘치면 … 처리)."""
-    lines, cur = [], ""
-    for ch in text:
+    lines, cur, truncated = [], "", False
+    for i, ch in enumerate(text):
         if d.textlength(cur + ch, font=font) > max_w:
             lines.append(cur)
             cur = ch.lstrip()
             if len(lines) == max_lines:
+                truncated = bool(text[i:].strip())  # 남은 글자가 있을 때만 … 표시
                 break
         else:
             cur += ch
     else:
         lines.append(cur)
-    if len(lines) > max_lines or (len(lines) == max_lines and "".join(lines) != text.replace("\n", "")):
-        lines = lines[:max_lines]
-        lines[-1] = _fit(d, lines[-1] + "…", font, max_w) if not lines[-1].endswith("…") else lines[-1]
+    if truncated:
+        lines[-1] = _fit(d, lines[-1] + "…", font, max_w)
     return [l for l in lines if l]
 
 
