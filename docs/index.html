@@ -136,6 +136,7 @@ function render(page){
     const calls = (arr, cls, title) => arr && arr.length ? `<div class="sc2 ${cls}"><b>${title}</b>${arr.map(c=>`<div class="r"><b>${esc(c.sector)}</b><span>${esc(c.reason)}${c.stocks.length?`<br><span class="st">${c.stocks.map(esc).join(", ")}</span>`:""}</span></div>`).join("")}</div>` : "";
     const op = (n, v, r) => `<div class="op"><b>${n}</b><span class="badge b-${esc(v)}">${esc(v)}</span><span>${esc(r)}</span></div>`;
     return `<section class="card mkt" id="market"><h2>📊 오늘 장 전망</h2>
+    <div class="meta" style="margin:-4px 0 8px">전일 마감 기준${(page.outlook_markets||[]).find(x=>x.date) ? " · " + esc((page.outlook_markets.map(x=>x.date).filter(Boolean).sort().pop())) : ""} (예상치 아님)</div>
     <div class="grid" style="margin-top:0">${(page.outlook_markets||[]).map(x => `<div class="m"><div class="n">${esc(x.name)}</div><div class="v">${esc(x.text)}</div><div class="c ${x.direction}">${arrow[x.direction]} ${esc(x.change)}</div></div>`).join("")}</div>
     <div class="nf" style="margin-top:10px">🌙 <b>야간선물</b> ${esc(m.night_futures)}</div>
     <h3>시초가 예상</h3>${op("코스피", m.kospi_open, m.kospi_reason)}${op("코스닥", m.kosdaq_open, m.kosdaq_reason)}

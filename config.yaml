@@ -38,8 +38,8 @@ markets:
 # 오늘 장 전망용 지표 (전일 국내 지수 + 밤사이 미국 시장)
 # EWY = 미국에 상장된 한국 주식 ETF로, 밤사이 한국 증시 분위기를 보여줌
 outlook_markets:
-  - { name: 코스피, ticker: "^KS11", unit: "pt" }
-  - { name: 코스닥, ticker: "^KQ11", unit: "pt" }
+  - { name: 코스피, ticker: "naver:KOSPI", unit: "pt" }
+  - { name: 코스닥, ticker: "naver:KOSDAQ", unit: "pt" }
   - { name: 나스닥, ticker: "^IXIC", unit: "pt" }
   - { name: S&P500, ticker: "^GSPC", unit: "pt" }
   - { name: 美반도체, ticker: "^SOX", unit: "pt" }

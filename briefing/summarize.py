@@ -100,7 +100,7 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
     fmt = lambda m: (f"{m['name']}: {m['text']} "
                      f"({'▲' if m['direction'] == 'up' else '▼' if m['direction'] == 'down' else '-'}{m['change']})")
     market_lines = [fmt(m) for m in markets]
-    outlook_lines = [fmt(m) for m in (outlook_markets or [])]
+    outlook_lines = [fmt(m) + (f" [{m['date']} 마감]" if m.get("date") else "") for m in (outlook_markets or [])]
     prompt = f"""오늘은 {date_str}입니다. 아래 자료로 아침 브리핑을 만드세요.
 
 ## 오늘 장 전망(market) 작성 규칙 — 가장 중요
@@ -115,7 +115,7 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
 - events: 아래 '선물·옵션 만기' 정보와 기사 속 금리 결정·CPI·실적 발표 일정을 넣습니다.
 - 확정된 사실처럼 쓰지 말고 '예상'임이 드러나게 씁니다.
 
-## 밤사이 시장 (전일 대비)
+## 전일 마감 시장 (각 지표의 마감 날짜 표시, 전일 대비 등락)
 {chr(10).join(outlook_lines) or "(데이터 없음)"}
 선물·옵션 만기: {expiry_note or "정보 없음"}
 

@@ -1,4 +1,5 @@
 """카톡에 크게 보이는 브리핑 카드 이미지(900x1200)를 그린다."""
+from datetime import date
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -197,9 +198,15 @@ def render_market(page: dict, path: Path) -> int:
     d.text((PAD, 70), f"{page['date_label']} · 밤사이 시장과 야간선물 반영", font=_font("regular", 22),
            fill=(190, 198, 215))
 
-    # 밤사이 시장 (3 x 2)
-    y = 124
+    # 밤사이 시장 (3 x 2) — 모두 '전일 마감' 값 (예상치 아님)
     mk = page.get("outlook_markets", [])[:6]
+    days = sorted({x["date"] for x in mk if x.get("date")})
+    when = ""
+    if days:
+        y_, m_, d_ = map(int, days[-1].split("-"))
+        when = f" · {m_}월 {d_}일({'월화수목금토일'[date(y_, m_, d_).weekday()]}) 기준"
+    d.text((PAD, 120), f"전일 마감{when}", font=_font("bold", 22), fill=SUB)
+    y = 156
     cols, gap = 3, 10
     cw = (inner - gap * (cols - 1)) / cols
     f_n, f_v, f_c = _font("regular", 21), _font("bold", 30), _font("bold", 21)
@@ -208,7 +215,9 @@ def render_market(page: dict, path: Path) -> int:
         r, c = divmod(i, cols)
         x, yy = PAD + c * (cw + gap), y + r * 104
         d.rounded_rectangle([x, yy, x + cw, yy + 94], radius=14, fill=CHIP_BG)
-        d.text((x + 14, yy + 8), x_m["name"], font=f_n, fill=SUB)
+        stale = x_m.get("date") and days and x_m["date"] < days[-1]
+        d.text((x + 14, yy + 8), x_m["name"] + (" (지연)" if stale else ""), font=f_n,
+               fill=UP if stale else SUB)
         d.text((x + 14, yy + 34), _fit(d, x_m["text"], f_v, cw * 0.62), font=f_v, fill=TEXT)
         color = UP if x_m["direction"] == "up" else DOWN if x_m["direction"] == "down" else SUB
         d.text((x + cw - 12, yy + 50), f"{arrows[x_m['direction']]}{x_m['change']}", font=f_c, fill=color,
