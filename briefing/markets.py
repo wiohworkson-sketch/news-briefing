@@ -16,7 +16,8 @@ def fetch(cfg: dict) -> list[dict]:
         row = {"name": m["name"], "value": None, "text": "-", "change": "", "direction": "flat"}
         try:
             hist = yf.Ticker(m["ticker"]).history(period="7d", interval="1d")["Close"].dropna()
-            last, prev = float(hist.iloc[-1]), float(hist.iloc[-2])
+            scale = m.get("scale", 1)
+            last, prev = float(hist.iloc[-1]) * scale, float(hist.iloc[-2]) * scale
             diff = last - prev
             row["value"] = last
             row["text"] = _fmt(last, m["unit"])

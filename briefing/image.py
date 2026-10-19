@@ -72,61 +72,73 @@ def render(page: dict, path: Path) -> None:
     d.text((PAD, 86), f"국내외 기사 {page['article_count']}건 AI 요약", font=_font("regular", 24), fill=HEADER_SUB)
 
     # ── 지표 한 줄 ──
-    y = 152
-    mk = page["markets"][:5]
-    gap = 10
+    y = 148
+    mk = page["markets"][:6]
+    gap = 8
     cw = (inner - gap * (len(mk) - 1)) / max(len(mk), 1)
-    f_n, f_v, f_c = _font("regular", 20), _font("bold", 26), _font("bold", 20)
+    f_n, f_v, f_c = _font("regular", 18), _font("bold", 23), _font("bold", 18)
     arrows = {"up": "▲", "down": "▼", "flat": "-"}
     for i, m in enumerate(mk):
         x = PAD + i * (cw + gap)
-        d.rounded_rectangle([x, y, x + cw, y + 108], radius=14, fill=CHIP_BG)
-        d.text((x + 14, y + 10), m["name"], font=f_n, fill=SUB)
-        d.text((x + 14, y + 38), _fit(d, m["text"], f_v, cw - 20), font=f_v, fill=TEXT)
+        d.rounded_rectangle([x, y, x + cw, y + 96], radius=12, fill=CHIP_BG)
+        d.text((x + 10, y + 8), _fit(d, m["name"], f_n, cw - 14), font=f_n, fill=SUB)
+        d.text((x + 10, y + 34), _fit(d, m["text"], f_v, cw - 14), font=f_v, fill=TEXT)
         color = UP if m["direction"] == "up" else DOWN if m["direction"] == "down" else SUB
-        d.text((x + 14, y + 74), f"{arrows[m['direction']]} {m['change']}", font=f_c, fill=color)
+        d.text((x + 10, y + 66), f"{arrows[m['direction']]} {m['change']}", font=f_c, fill=color)
 
     # ── 오늘의 핵심 3줄 ──
-    y = 290
-    d.text((PAD, y), "오늘의 핵심", font=_font("bold", 30), fill=TEXT)
-    y += 50
-    f_hl, f_num = _font("bold", 32), _font("bold", 24)
+    y = 264
+    d.text((PAD, y), "오늘의 핵심", font=_font("bold", 28), fill=TEXT)
+    y += 46
+    f_hl, f_num = _font("bold", 31), _font("bold", 23)
     for i, h in enumerate(b["headlines"][:3], 1):
-        d.ellipse([PAD, y + 6, PAD + 38, y + 44], fill=HEADER)
-        d.text((PAD + 19, y + 25), str(i), font=f_num, fill=(255, 255, 255), anchor="mm")
-        d.text((PAD + 54, y + 2), _fit(d, h, f_hl, inner - 54), font=f_hl, fill=TEXT)
-        y += 56
+        d.ellipse([PAD, y + 6, PAD + 36, y + 42], fill=HEADER)
+        d.text((PAD + 18, y + 24), str(i), font=f_num, fill=(255, 255, 255), anchor="mm")
+        d.text((PAD + 50, y + 2), _fit(d, h, f_hl, inner - 50), font=f_hl, fill=TEXT)
+        y += 52
 
     # ── 분야별 뉴스 2개씩 ──
-    y += 14
+    y += 10
     d.line([PAD, y, W - PAD, y], fill=LINE, width=2)
-    y += 20
-    f_tag, f_row = _font("bold", 23), _font("regular", 28)
-    tag_col = 150
+    y += 16
+    f_tag, f_row = _font("bold", 22), _font("regular", 26)
+    tag_col = 140
     for i, sec in enumerate(b["sections"][:4]):
         titles = [it["kakao_title"] or it["title"] for it in sec["items"]]
         picks = [t for t in titles if t not in b["headlines"]][:2] or titles[:2]
         if not picks:
             continue
         color = SECTION_COLORS[i % len(SECTION_COLORS)]
-        tw = int(d.textlength(sec["name"], font=f_tag)) + 24
-        d.rounded_rectangle([PAD, y + 2, PAD + tw, y + 40], radius=10, fill=color)
-        d.text((PAD + 12, y + 21), sec["name"], font=f_tag, fill=(255, 255, 255), anchor="lm")
+        tw = int(d.textlength(sec["name"], font=f_tag)) + 22
+        d.rounded_rectangle([PAD, y + 2, PAD + tw, y + 38], radius=10, fill=color)
+        d.text((PAD + 11, y + 20), sec["name"], font=f_tag, fill=(255, 255, 255), anchor="lm")
         for k, t in enumerate(picks):
-            d.text((PAD + tag_col, y + 21 + k * 44), "· " + _fit(d, t, f_row, inner - tag_col - 30),
+            d.text((PAD + tag_col, y + 20 + k * 40), "· " + _fit(d, t, f_row, inner - tag_col - 30),
                    font=f_row, fill=TEXT, anchor="lm")
-        y += 44 * len(picks) + 16
+        y += 40 * len(picks) + 12
 
-    # ── 오늘의 시사점 ──
-    y += 6
-    f_ins = _font("regular", 26)
-    lines = _wrap(d, b.get("insight_kakao") or " ".join(b["insight"]), f_ins, inner - 48, 3)
-    box_h = 64 + 40 * len(lines) + 12
-    box_h = min(box_h, H - 24 - y)
+    # ── 오늘의 시사점 (쉽게 풀어보기) ──
+    y += 8
+    f_ins, f_lab = _font("regular", 24), _font("bold", 24)
+    easy = b.get("insight_easy")
+    if easy:
+        rows = [("무슨 일?", easy["what"]), ("어떤 영향?", easy["impact"]), ("그래서?", easy["result"])]
+    else:  # 예전 데이터
+        rows = [("", t) for t in _wrap(d, b.get("insight_kakao", ""), f_ins, inner - 48, 3)]
+    lab_w = 128 if easy else 0
+    wrapped = [(lab, _wrap(d, txt, f_ins, inner - 48 - lab_w, 2)) for lab, txt in rows]
+    line_h = 34
+    box_h = 58 + sum(len(ls) * line_h + 10 for _, ls in wrapped) + 8
+    box_h = min(box_h, H - 16 - y)
     d.rounded_rectangle([PAD, y, W - PAD, y + box_h], radius=18, fill=INSIGHT_BG)
-    d.text((PAD + 24, y + 16), "오늘의 시사점", font=_font("bold", 26), fill=INSIGHT_TX)
-    for k, line in enumerate(lines):
-        d.text((PAD + 24, y + 60 + k * 40), line, font=f_ins, fill=TEXT)
+    d.text((PAD + 24, y + 14), "오늘의 시사점 · 쉽게 풀어보기", font=_font("bold", 25), fill=INSIGHT_TX)
+    yy = y + 58
+    for lab, ls in wrapped:
+        if lab:
+            d.text((PAD + 24, yy), lab, font=f_lab, fill=INSIGHT_TX)
+        for k, line in enumerate(ls):
+            d.text((PAD + 24 + lab_w, yy + k * line_h), line, font=f_ins, fill=TEXT)
+        yy += len(ls) * line_h + 10
 
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path, "PNG", optimize=True)

@@ -37,9 +37,16 @@ class KeywordHit(BaseModel):
     items: list[Item] = Field(description="해당 키워드 관련 뉴스. 없으면 빈 목록")
 
 
+class EasyInsight(BaseModel):
+    what: str = Field(description="무슨 일이 있었나: 초등학생도 알아듣게 쉬운 말로, 40자 이내")
+    impact: str = Field(description="어떤 영향이 있나: 우리 생활·용돈·물가·일자리 등에 미치는 영향, 40자 이내")
+    result: str = Field(description="그래서 어떻게 되나: 앞으로 예상되는 결과, 40자 이내")
+
+
 class Briefing(BaseModel):
     headlines: list[str] = Field(description="오늘의 핵심 3개, 각 25자 이내")
     insight: list[str] = Field(description="오늘의 시사점 3줄. 여러 뉴스를 엮어 '그래서 무엇이 중요한가'")
+    insight_easy: EasyInsight = Field(description="오늘 가장 중요한 흐름을 초등학생도 이해하게 풀어쓴 설명")
     insight_kakao: str = Field(description="시사점을 카톡용으로 압축, 90자 이내")
     market_comment: str = Field(description="지표 흐름 한 줄 해설, 40자 이내")
     sections: list[Section]
@@ -77,6 +84,9 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
 - 분야별 항목은 {cfg.get("items_per_section", 4)}개 내외, 중요한 순서대로.
 - 국내 뉴스를 중심으로 하되 미국 등 외신의 중요한 뉴스도 반드시 포함하세요.
 - 관심 키워드(keywords)는 정확히 이 순서로: {", ".join(cfg["keywords"])} — 관련 뉴스가 없으면 items를 빈 목록으로.
+- 쉬운 시사점(insight_easy)은 초등학생도 이해할 수 있게 쓰세요. 어려운 경제·정치 용어는 쓰지 말고 풀어서 말하고,
+  필요하면 비유를 쓰세요. (예: "환율이 오르면 → 해외 물건값이 비싸져요 → 수입 과자·여행비가 오를 수 있어요")
+  이 항목만은 개조식 대신 "~해요"체로 친절하게 씁니다.
 - 일정(schedule)은 기사에 '오늘' 예정으로 언급된 것만 넣으세요(경제지표 발표, 회의, 실적 발표 등). 확실하지 않으면 넣지 마세요.
 
 ## 시장 지표 (전일 대비)

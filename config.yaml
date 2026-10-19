@@ -25,9 +25,10 @@ sections:
   - IT·AI
   - 사회·생활
 
-# 시장 지표 (이름은 카톡 표에 들어가므로 6글자 이내)
+# 시장 지표 (이름은 6글자 이내, scale: 곱할 값 — 예: 100엔당 원화)
 markets:
   - { name: 원/달러, ticker: "KRW=X", unit: "원" }
+  - { name: 원/100엔, ticker: "JPYKRW=X", unit: "원", scale: 100 }
   - { name: 美10년물, ticker: "^TNX", unit: "%" }
   - { name: WTI유가, ticker: "CL=F", unit: "$" }
   - { name: 금, ticker: "GC=F", unit: "$" }

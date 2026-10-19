@@ -31,7 +31,7 @@ header h1{font-size:30px;margin:0;font-weight:700}
 select,button,input{font:inherit;font-size:15px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:8px 12px}
 button{cursor:pointer}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:16px 0 4px}
-@media (min-width:560px){.grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media (min-width:560px){.grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
 .m{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .m .n{font-size:14px;color:var(--sub)}
 .m .v{font-size:22px;font-weight:700;line-height:1.3}
@@ -45,6 +45,10 @@ button{cursor:pointer}
 .hl li{font-size:19px;font-weight:700;padding:6px 0;border-bottom:1px solid var(--line)}
 .hl li:last-child{border:none}
 .ins p{margin:0 0 10px;font-size:18px}
+.easy{background:var(--soft);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.easy .et{font-weight:700;font-size:16px;margin-bottom:6px;color:var(--accent)}
+.easy .er{display:grid;grid-template-columns:92px 1fr;gap:8px;font-size:17px;padding:4px 0}
+.easy .er b{color:var(--accent)}
 .item{padding:10px 0;border-top:1px solid var(--line)}
 .item:first-of-type{border-top:none;padding-top:2px}
 .item h3{font-size:19px;margin:0 0 3px;font-weight:700}
@@ -113,7 +117,12 @@ function render(page){
   <div class="mc">${esc(b.market_comment)}</div>
   <nav class="toc"><a href="#top3">핵심</a><a href="#insight">시사점</a>${b.sections.map((s,i)=>`<a href="#sec-${i}">${esc(s.name)}</a>`).join("")}<a href="#views">국내vs외신</a><a href="#sched">일정</a><a href="#kw">키워드</a></nav>
   <section class="card" id="top3"><h2>🔥 오늘의 핵심</h2><ul class="hl">${b.headlines.map(h=>`<li>${esc(h)}</li>`).join("")}</ul></section>
-  <section class="card ins" id="insight"><h2>💡 오늘의 시사점</h2>${b.insight.map(t=>`<p>▸ ${esc(t)}</p>`).join("")}</section>
+  <section class="card ins" id="insight"><h2>💡 오늘의 시사점</h2>
+    ${b.insight_easy ? `<div class="easy"><div class="et">🧒 쉽게 풀어보기</div>
+      <div class="er"><b>무슨 일?</b><span>${esc(b.insight_easy.what)}</span></div>
+      <div class="er"><b>어떤 영향?</b><span>${esc(b.insight_easy.impact)}</span></div>
+      <div class="er"><b>그래서?</b><span>${esc(b.insight_easy.result)}</span></div></div>` : ""}
+    ${b.insight.map(t=>`<p>▸ ${esc(t)}</p>`).join("")}</section>
   ${b.sections.map((s,i)=>`<section class="card" id="sec-${i}"><h2><span class="dot" style="background:var(--c${i%6})"></span>${ICONS[i%6]} ${esc(s.name)}</h2>
     ${s.items.map(it=>item(page,it)).join("")}</section>`).join("")}
   <section class="card" id="views"><h2>🔍 국내 vs 외신 시각</h2>${b.perspectives.map(p=>`<div class="pv"><b>${esc(p.topic)}</b>
