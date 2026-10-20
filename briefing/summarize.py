@@ -101,6 +101,9 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
                      f"({'▲' if m['direction'] == 'up' else '▼' if m['direction'] == 'down' else '-'}{m['change']})")
     market_lines = [fmt(m) for m in markets]
     outlook_lines = [fmt(m) + (f" [{m['date']} 마감]" if m.get("date") else "") for m in (outlook_markets or [])]
+    kw_lines = "
+".join(
+        f"  · {k['name']} — {k.get('hint', '')}" if isinstance(k, dict) else f"  · {k}" for k in cfg["keywords"])
     prompt = f"""오늘은 {date_str}입니다. 아래 자료로 아침 브리핑을 만드세요.
 
 ## 오늘 장 전망(market) 작성 규칙 — 가장 중요
@@ -126,7 +129,9 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
 - 분야(sections)는 정확히 이 순서와 이름으로: {", ".join(cfg["sections"])}
 - 분야별 항목은 정확히 {cfg.get("items_per_section", 3)}개, 중요한 순서대로.
 - 국내 뉴스를 중심으로 하되 미국 등 외신의 중요한 뉴스도 반드시 포함하세요.
-- 관심 키워드(keywords)는 정확히 이 순서로: {", ".join(cfg["keywords"])} — 관련 뉴스가 없으면 items를 빈 목록으로.
+- 관심 키워드(keywords)는 정확히 이 순서와 이름(keyword)으로 쓰고, 설명을 참고해 관련 뉴스를 0~3개 고르세요.
+  관련 뉴스가 없으면 items를 빈 목록으로 둡니다:
+{kw_lines}
 - 쉬운 시사점(insight_easy)은 초등학생도 이해할 수 있게 쓰세요. 어려운 경제·정치 용어는 쓰지 말고 풀어서 말하고,
   필요하면 비유를 쓰세요. (예: "환율이 오르면 → 해외 물건값이 비싸져요 → 수입 과자·여행비가 오를 수 있어요")
   IT·AI 시사점(insight_it)과 증시 시사점(insight_market)도 같은 쉬운 말로 한 문장씩 씁니다.

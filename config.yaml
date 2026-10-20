@@ -12,11 +12,11 @@ model: gemini-3.8-flash
 items_per_section: 3
 
 # 관심 키워드 (원하는 만큼 추가/삭제)
+# name: 화면에 보이는 이름 / hint: AI가 관련 뉴스를 고를 때 참고하는 설명
 keywords:
-  - 반도체·AI칩
-  - 부동산 정책
-  - 미국 금리·연준
-  - 미중 무역·관세
+  - { name: 타이어, hint: "한국타이어·금호타이어·넥센타이어 등 타이어 업계, 천연고무·합성고무 가격, 자동차 수요" }
+  - { name: 항공(+유가), hint: "대한항공·아시아나·저비용항공사 등 항공업계, 여객·화물 수요, 국제유가·항공유 가격" }
+  - { name: 파이프(PE), hint: "폴리에틸렌(PE) 파이프·배관 업계, PE 원료(석유화학) 가격, 건설·상하수도·가스관 수요" }
 
 # 브리핑 분야 (이름을 바꾸면 카톡/웹페이지 제목도 바뀝니다)
 sections:
@@ -69,6 +69,10 @@ feeds:
   - { name: 증시전망, origin: 국내, url: "https://news.google.com/rss/search?q=%ED%8A%B9%EC%A7%95%EC%A3%BC+OR+%EC%88%98%ED%98%9C%EC%A3%BC+when:1d&hl=ko&gl=KR&ceid=KR:ko" }
   # 부동산 (구글 뉴스 검색: 아파트·분양·전세·부동산 정책)
   - { name: 부동산뉴스, origin: 국내, url: "https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0+OR+%EC%95%84%ED%8C%8C%ED%8A%B8+OR+%EC%A0%84%EC%84%B8+OR+%EB%B6%84%EC%96%91+when:1d&hl=ko&gl=KR&ceid=KR:ko" }
+  # 관심 키워드 (구글 뉴스 검색)
+  - { name: 타이어뉴스, origin: 국내, url: "https://news.google.com/rss/search?q=%ED%83%80%EC%9D%B4%EC%96%B4+OR+%ED%95%9C%EA%B5%AD%ED%83%80%EC%9D%B4%EC%96%B4+OR+%EA%B8%88%ED%98%B8%ED%83%80%EC%9D%B4%EC%96%B4+OR+%EB%84%A5%EC%84%BC%ED%83%80%EC%9D%B4%EC%96%B4+when:1d&hl=ko&gl=KR&ceid=KR:ko" }
+  - { name: 항공뉴스, origin: 국내, url: "https://news.google.com/rss/search?q=%ED%95%AD%EA%B3%B5%EC%82%AC+OR+%EB%8C%80%ED%95%9C%ED%95%AD%EA%B3%B5+OR+%EC%95%84%EC%8B%9C%EC%95%84%EB%82%98+OR+%ED%95%AD%EA%B3%B5%EC%9C%A0+when:1d&hl=ko&gl=KR&ceid=KR:ko" }
+  - { name: PE파이프뉴스, origin: 국내, url: "https://news.google.com/rss/search?q=PE%ED%8C%8C%EC%9D%B4%ED%94%84+OR+%ED%8F%B4%EB%A6%AC%EC%97%90%ED%8B%B8%EB%A0%8C+OR+PE%EA%B4%80+OR+%ED%94%8C%EB%9D%BC%EC%8A%A4%ED%8B%B1+%EB%B0%B0%EA%B4%80+when:1d&hl=ko&gl=KR&ceid=KR:ko" }
   # 바이오·제약 (구글 뉴스 검색)
   - { name: 바이오뉴스, origin: 국내, url: "https://news.google.com/rss/search?q=%EB%B0%94%EC%9D%B4%EC%98%A4+OR+%EC%A0%9C%EC%95%BD+when:1d&hl=ko&gl=KR&ceid=KR:ko" }
   # ---- 외신 ----
