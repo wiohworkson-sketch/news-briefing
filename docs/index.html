@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Cache-Control" content="no-cache">
 <title>아침 뉴스 브리핑</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☀️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -236,7 +237,7 @@ function render(page){
 
 async function printA3(date){
   try { const r = await fetch(`pdf/${date}.pdf`, {method: "HEAD", cache: "no-store"});
-        if (r.ok) { location.href = `pdf/${date}.pdf`; return; } } catch(e) {}
+        if (r.ok) { location.href = `pdf/${date}.pdf?v=${Date.now()}`; return; } } catch(e) {}
   window.print();
 }
 
