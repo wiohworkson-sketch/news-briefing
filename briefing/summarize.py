@@ -168,4 +168,8 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
             except ValueError as e:  # 응답 형식 오류 → 재시도
                 last_error = e
                 print(f"[경고] {model} 응답 형식 오류: {e}")
+            except Exception as e:  # 연결 끊김·시간 초과 등 네트워크 오류 → 잠시 후 재시도
+                last_error = e
+                print(f"[경고] {model} 연결 오류 ({type(e).__name__}): {e}")
+                time.sleep(15 * (attempt + 1))
     raise RuntimeError(f"AI 브리핑 작성 실패: {last_error}")
