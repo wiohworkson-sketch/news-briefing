@@ -49,6 +49,7 @@ def _fetch_feed(feed: dict, cutoff: float, max_items: int) -> tuple[dict, list[d
             "url": entry.get("link", ""),
             "source": source,
             "origin": origin,
+            "keyword": feed.get("keyword", ""),
             "ts": ts,
         })
         if len(items) >= max_items:

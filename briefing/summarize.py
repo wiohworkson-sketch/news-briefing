@@ -94,7 +94,7 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
                   night_lines: list[str] | None = None) -> Briefing:
     client = genai.Client()  # GEMINI_API_KEY 환경변수 사용
     lines = [
-        f"[{a['id']}] ({a['source']}|{a['origin']}) {a['title']} — {a['summary']}"
+        f"[{a['id']}] ({a['source']}|{a['origin']}){' [키워드 후보: ' + a['keyword'] + ']' if a.get('keyword') else ''} {a['title']} — {a['summary']}"
         for a in articles
     ]
     fmt = lambda m: (f"{m['name']}: {m['text']} "
@@ -129,6 +129,8 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
 - 분야별 항목은 정확히 {cfg.get("items_per_section", 3)}개, 중요한 순서대로.
 - 국내 뉴스를 중심으로 하되 미국 등 외신의 중요한 뉴스도 반드시 포함하세요.
 - 관심 키워드(keywords)는 정확히 이 순서와 이름(keyword)으로 쓰고, 설명을 참고해 관련 뉴스를 0~3개 고르세요.
+  기사 목록에 '[키워드 후보: 이름]' 표시가 붙은 기사는 그 키워드 전용 검색으로 모은 기사이니 우선 살펴보고,
+  설명에 맞는 기사는 꼭 넣으세요. 다른 키워드나 무관한 기사(예: 항공 키워드에 선박 기사, 스포츠 기사)는 넣지 마세요.
   관련 뉴스가 없으면 items를 빈 목록으로 둡니다:
 {kw_lines}
 - 쉬운 시사점(insight_easy)은 초등학생도 이해할 수 있게 쓰세요. 어려운 경제·정치 용어는 쓰지 말고 풀어서 말하고,
