@@ -91,6 +91,60 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin-top:30px}
 .sc2 .r{display:grid;grid-template-columns:80px 1fr;gap:6px;padding:4px 0;font-size:15.5px}
 .sc2 .st{font-weight:700}.sc2.up .st{color:var(--up)}.sc2.dn .st{color:var(--down)}
 .warn{font-size:12.5px;color:var(--muted);margin-top:10px}
+
+/* ───── A3 한 장 인쇄 ───── */
+.print-btn{font-size:14px;padding:7px 12px;margin-left:6px}
+.print-only{display:none}
+@page{size:A3 portrait;margin:9mm}
+@media print{
+  :root,:root:not([data-theme="light"]){
+    --bg:#fff;--card:#fff;--soft:#f1f0eb;--text:#111;--sub:#444;--muted:#666;--line:#d6d4cc;
+    --up:#c62828;--down:#1d4ed8;--accent:#1d4ed8;--c2:#0f7a5a;
+    --kr-bg:#e6f3e0;--kr-tx:#2f6b14;--fx-bg:#eceafd;--fx-tx:#4a40a8;
+  }
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{background:#fff;font-size:8.4pt;line-height:1.38}
+  .wrap{max-width:none;padding:0}
+  #day,.toc,.print-btn,footer{display:none!important}
+  .print-only{display:block}
+  #app{column-count:3;column-gap:5mm;column-fill:balance;zoom:var(--pz,1.1)}
+  header,#app>.grid,#app>.mc{column-span:all}
+  header h1{font-size:17pt}
+  header .bar{margin-bottom:2mm;align-items:flex-end}
+  .meta{font-size:7.5pt}
+  #app>.grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:2mm;margin:0 0 1mm}
+  .m{padding:1.2mm 2mm;border-radius:4px}
+  .m .n{font-size:7pt}.m .v{font-size:10.5pt}.m .c{font-size:7.5pt}
+  .mc{font-size:7.8pt;margin:0 0 3mm}
+  .card{break-inside:avoid;page-break-inside:avoid;border:0.6pt solid var(--line);border-radius:5px;
+        padding:2.2mm 2.8mm;margin:0 0 3mm;display:block}
+  .card h2{font-size:10.5pt;margin:0 0 1.5mm;gap:4px}
+  .hl li{font-size:9pt;padding:0.6mm 0}
+  .ins p{font-size:8.2pt;margin:0 0 1mm}
+  .easy{padding:1.6mm 2.2mm;margin-bottom:1.6mm;border-radius:4px}
+  .easy .et{font-size:8pt;margin-bottom:0.6mm}
+  .easy .er{font-size:8.2pt;grid-template-columns:15mm 1fr;gap:1.5mm;padding:0.4mm 0}
+  .item{padding:1.2mm 0}
+  .item h3{font-size:8.8pt;margin:0 0 0.4mm}
+  .item p{font-size:8pt;margin:0 0 0.4mm}
+  .src{gap:1mm;margin-top:0.4mm}
+  .src a{font-size:6.6pt;padding:0 1.4mm}
+  .tag{font-size:6.2pt;padding:0 1mm}
+  .pv{padding:1mm 0}.pv div{font-size:8pt;margin:0.3mm 0}
+  .sc{grid-template-columns:12mm 9mm 1fr;font-size:8pt;padding:0.6mm 0}
+  .kw{margin-top:1mm}.kw h3{font-size:8.6pt;margin:0 0 0.4mm}.kw .none{font-size:7.5pt}
+  .mkt .nf{font-size:8.2pt;padding:1.2mm 2mm;margin:1.4mm 0!important}
+  .mkt .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:1.4mm}
+  .mkt h3{font-size:8.8pt;margin:1.8mm 0 0.6mm}
+  .mkt .op{font-size:8pt;gap:1.6mm;padding:0.4mm 0}
+  .mkt .op b{min-width:9mm;font-size:8.4pt}
+  .badge{font-size:7.8pt;padding:0.2mm 1.6mm}
+  .mkt ul{font-size:8pt;padding-left:4mm}
+  .sc2{padding:1.4mm 2mm;margin-top:1.2mm;border-radius:4px}
+  .sc2 .r{grid-template-columns:13mm 1fr;font-size:7.8pt;gap:1mm;padding:0.4mm 0}
+  .warn{font-size:6.8pt;margin-top:1mm}
+  .print-foot{column-span:all;font-size:7pt;color:var(--muted);text-align:center;margin-top:1mm}
+}
 </style>
 </head>
 <body>
@@ -106,6 +160,8 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ICONS = {"증시·경제":"📈","정치·국제":"🌏","IT·AI":"💻","바이오·제약":"💊","사회·생활":"🏙️"};
 let dates = [];
+const pz = new URLSearchParams(location.search).get("pz");
+if (pz && /^[0-9.]+$/.test(pz)) document.documentElement.style.setProperty("--pz", pz);
 
 async function getJSON(p){ const r = await fetch(p, {cache:"no-store"}); if(!r.ok) throw new Error(p); return r.json(); }
 
@@ -126,7 +182,7 @@ function render(page){
   <header>
     <div class="bar"><div><h1>${esc(page.date_label)} 아침 브리핑</h1>
       <div class="meta">기사 ${page.article_count}건 분석 · ${esc(page.generated_at)} 생성</div></div>
-      <select id="day" aria-label="지난 브리핑">${opts}</select></div>
+      <div><select id="day" aria-label="지난 브리핑">${opts}</select><button class="print-btn" onclick="printA3('${page.date}')">🖨 A3 인쇄</button></div></div>
   </header>
   <div class="grid">${page.markets.map(m => `<div class="m"><div class="n">${esc(m.name)}</div><div class="v">${esc(m.text)}</div>
     <div class="c ${m.direction}">${arrow[m.direction]} ${esc(m.change)}</div></div>`).join("")}</div>
@@ -161,9 +217,16 @@ function render(page){
   <section class="card" id="sched"><h2>📅 오늘의 일정</h2>${b.schedule.length ? b.schedule.map(s=>`<div class="sc"><span class="t">${esc(s.time)}</span><span class="r">${esc(s.region)}</span><span>${esc(s.event)}</span></div>`).join("") : '<div class="meta">확인된 일정이 없습니다.</div>'}</section>
   <section class="card" id="kw"><h2>🎯 관심 키워드</h2>${b.keywords.map(k=>`<div class="kw"><h3># ${esc(k.keyword)} <span class="meta">${k.items.length}건</span></h3>
     ${k.items.length ? k.items.map(it=>item(page,it)).join("") : '<div class="none">오늘은 관련 뉴스가 없습니다.</div>'}</div>`).join("")}</section>
-  <footer>AI(Gemini)가 기사를 요약했습니다. 중요한 내용은 원문을 확인하세요.</footer>`;
+  <footer>AI(Gemini)가 기사를 요약했습니다. 중요한 내용은 원문을 확인하세요.</footer>
+  <div class="print-only print-foot">AI(Gemini)가 국내외 기사를 요약한 자료입니다. 장 전망은 예상이며 투자 권유가 아닙니다 · wiohworkson-sketch.github.io/news-briefing</div>`;
   $("#day").onchange = e => { history.replaceState(null, "", `?d=${e.target.value}`); show(e.target.value); };
   if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+}
+
+async function printA3(date){
+  try { const r = await fetch(`pdf/${date}.pdf`, {method: "HEAD", cache: "no-store"});
+        if (r.ok) { location.href = `pdf/${date}.pdf`; return; } } catch(e) {}
+  window.print();
 }
 
 async function show(date){

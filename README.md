@@ -36,6 +36,11 @@
 ### 잠시 멈추기 / 다시 켜기
 **Actions** 탭 → **아침 뉴스 브리핑** → 오른쪽 위 `···` → **Disable workflow**를 누릅니다. 다시 켤 때는 **Enable workflow**를 누릅니다.
 
+### A3 한 장으로 인쇄하기
+웹페이지 오른쪽 위 **[🖨 A3 인쇄]** 버튼을 누르면 그날 브리핑이 A3 한 장짜리 PDF로 열립니다.
+인쇄할 때 용지를 **A3**, 배율을 **100%(실제 크기)**로 고르세요. PDF는 최근 2주치가 보관됩니다.
+(PDF 주소: https://wiohworkson-sketch.github.io/news-briefing/pdf/날짜.pdf)
+
 ### 다른 사람에게 공유하기
 카톡으로 온 브리핑의 [전체 브리핑 보기]를 누른 뒤, 브라우저 주소를 복사해 보내면 됩니다. 매일 최신 브리핑 주소: https://wiohworkson-sketch.github.io/news-briefing/
 
@@ -60,6 +65,7 @@
 | `briefing/kakao.py` | 카카오톡 나에게 보내기, 로그인 자동 연장 |
 | `.github/workflows/daily-briefing.yml` | 매일 06:15 시작 → 07:00 발송 예약 |
 | `briefing/naver.py` | 야간선물 등락이 적힌 기사 문장 수집 |
+| `make_pdf.py` | 매일 A3 한 장짜리 인쇄용 PDF 생성 |
 | `setup.py` | 최초 1회 키 입력·카카오 연결 도우미 |
 
 API 키는 GitHub의 암호화된 **Secrets**에만 저장되며 공개되지 않습니다. 카카오 로그인 정보도 암호화되어 저장됩니다. 브리핑 웹페이지는 공유하기 쉽도록 비밀번호 없이 공개됩니다.
