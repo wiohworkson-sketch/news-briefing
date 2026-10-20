@@ -92,6 +92,17 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin-top:30px}
 .sc2 .st{font-weight:700}.sc2.up .st{color:var(--up)}.sc2.dn .st{color:var(--down)}
 .warn{font-size:12.5px;color:var(--muted);margin-top:10px}
 
+
+/* ───── 세션 제목 색깔 띠: 남색 = 장 전망·핵심·시사점 / 청록 = 뉴스 분야 ───── */
+:root{--band-a:#1e3a8a;--band-b:#0f766e}
+.card.ga,.card.gb{overflow:hidden}
+.card.ga h2,.card.gb h2{margin:-16px -18px 12px;padding:9px 18px;color:#fff}
+.card.ga h2{background:var(--band-a)}
+.card.gb h2{background:var(--band-b)}
+.card.ga h2 .dot,.card.gb h2 .dot{display:none}
+@media print{
+  .card.ga h2,.card.gb h2{margin:-2.2mm -2.8mm 1.6mm;padding:1.3mm 2.8mm;font-size:10.5pt}
+}
 /* ───── A3 한 장 인쇄 ───── */
 .print-btn{font-size:14px;padding:7px 12px;margin-left:6px}
 .print-only{display:none}
@@ -191,7 +202,7 @@ function render(page){
   ${b.market ? (() => { const m = b.market;
     const calls = (arr, cls, title) => arr && arr.length ? `<div class="sc2 ${cls}"><b>${title}</b>${arr.map(c=>`<div class="r"><b>${esc(c.sector)}</b><span>${esc(c.reason)}${c.stocks.length?`<br><span class="st">${c.stocks.map(esc).join(", ")}</span>`:""}</span></div>`).join("")}</div>` : "";
     const op = (n, v, r) => `<div class="op"><b>${n}</b><span class="badge b-${esc(v)}">${esc(v)}</span><span>${esc(r)}</span></div>`;
-    return `<section class="card mkt" id="market"><h2>📊 오늘 장 전망</h2>
+    return `<section class="card mkt ga" id="market"><h2>📊 오늘 장 전망</h2>
     <div class="meta" style="margin:-4px 0 8px">전일 마감 기준${(page.outlook_markets||[]).find(x=>x.date) ? " · " + esc((page.outlook_markets.map(x=>x.date).filter(Boolean).sort().pop())) : ""} (예상치 아님)</div>
     <div class="grid" style="margin-top:0">${(page.outlook_markets||[]).map(x => `<div class="m"><div class="n">${esc(x.name)}</div><div class="v">${esc(x.text)}</div><div class="c ${x.direction}">${arrow[x.direction]} ${esc(x.change)}</div></div>`).join("")}</div>
     <div class="nf" style="margin-top:10px">🌙 <b>야간선물</b> ${esc(m.night_futures)}</div>
@@ -201,8 +212,8 @@ function render(page){
     ${m.events.length ? `<h3>이벤트</h3><ul>${m.events.map(e=>`<li>${esc(e)}</li>`).join("")}</ul>` : ""}
     ${sources(page, m.article_ids)}
     <div class="warn">AI가 기사로 예상한 내용이며 투자 권유가 아닙니다. 투자 판단은 본인 책임입니다.</div></section>`; })() : ""}
-  <section class="card" id="top3"><h2>🔥 오늘의 핵심</h2><ul class="hl">${b.headlines.map(h=>`<li>${esc(h)}</li>`).join("")}</ul></section>
-  <section class="card ins" id="insight"><h2>💡 오늘의 시사점</h2>
+  <section class="card ga" id="top3"><h2>🔥 오늘의 핵심</h2><ul class="hl">${b.headlines.map(h=>`<li>${esc(h)}</li>`).join("")}</ul></section>
+  <section class="card ins ga" id="insight"><h2>💡 오늘의 시사점</h2>
     ${b.insight_easy ? `<div class="easy"><div class="et">🧒 쉽게 풀어보기</div>
       <div class="er"><b>무슨 일?</b><span>${esc(b.insight_easy.what)}</span></div>
       <div class="er"><b>어떤 영향?</b><span>${esc(b.insight_easy.impact)}</span></div>
@@ -210,12 +221,12 @@ function render(page){
       ${b.insight_it ? `<div class="er sub"><b>IT·AI</b><span>${esc(b.insight_it)}</span></div>` : ""}
       ${b.insight_market ? `<div class="er sub"><b>증시</b><span>${esc(b.insight_market)}</span></div>` : ""}</div>` : ""}
     ${b.insight.map(t=>`<p>▸ ${esc(t)}</p>`).join("")}</section>
-  ${b.sections.map((s,i)=>`<section class="card" id="sec-${i}"><h2><span class="dot" style="background:var(--c${i%6})"></span>${ICONS[s.name] || "📰"} ${esc(s.name)}</h2>
+  ${b.sections.map((s,i)=>`<section class="card gb" id="sec-${i}"><h2><span class="dot" style="background:var(--c${i%6})"></span>${ICONS[s.name] || "📰"} ${esc(s.name)}</h2>
     ${s.items.slice(0,3).map(it=>item(page,it)).join("")}</section>`).join("")}
-  <section class="card" id="views"><h2>🔍 국내 vs 외신 시각</h2>${b.perspectives.map(p=>`<div class="pv"><b>${esc(p.topic)}</b>
+  <section class="card gb" id="views"><h2>🔍 국내 vs 외신 시각</h2>${b.perspectives.map(p=>`<div class="pv"><b>${esc(p.topic)}</b>
     <div><span class="tag kr">국내</span>${esc(p.domestic)}</div><div><span class="tag fx">외신</span>${esc(p.foreign)}</div>${sources(page,p.article_ids)}</div>`).join("")}</section>
-  <section class="card" id="sched"><h2>📅 오늘의 일정</h2>${b.schedule.length ? b.schedule.map(s=>`<div class="sc"><span class="t">${esc(s.time)}</span><span class="r">${esc(s.region)}</span><span>${esc(s.event)}</span></div>`).join("") : '<div class="meta">확인된 일정이 없습니다.</div>'}</section>
-  <section class="card" id="kw"><h2>🎯 관심 키워드</h2>${b.keywords.map(k=>`<div class="kw"><h3># ${esc(k.keyword)} <span class="meta">${k.items.length}건</span></h3>
+  <section class="card gb" id="sched"><h2>📅 오늘의 일정</h2>${b.schedule.length ? b.schedule.map(s=>`<div class="sc"><span class="t">${esc(s.time)}</span><span class="r">${esc(s.region)}</span><span>${esc(s.event)}</span></div>`).join("") : '<div class="meta">확인된 일정이 없습니다.</div>'}</section>
+  <section class="card gb" id="kw"><h2>🎯 관심 키워드</h2>${b.keywords.map(k=>`<div class="kw"><h3># ${esc(k.keyword)} <span class="meta">${k.items.length}건</span></h3>
     ${k.items.length ? k.items.map(it=>item(page,it)).join("") : '<div class="none">오늘은 관련 뉴스가 없습니다.</div>'}</div>`).join("")}</section>
   <footer>AI(Gemini)가 기사를 요약했습니다. 중요한 내용은 원문을 확인하세요.</footer>
   <div class="print-only print-foot">AI(Gemini)가 국내외 기사를 요약한 자료입니다. 장 전망은 예상이며 투자 권유가 아닙니다 · wiohworkson-sketch.github.io/news-briefing</div>`;
