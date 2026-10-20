@@ -11,6 +11,10 @@ on:
         description: "기다리지 않고 바로 카톡 발송"
         type: boolean
         default: true
+      skip_send:
+        description: "카톡은 보내지 않고 브리핑·PDF만 만들기 (테스트용)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -62,6 +66,7 @@ jobs:
           git push
 
       - name: 카톡 발송
+        if: github.event_name == 'schedule' || !inputs.skip_send
         run: |
           if [ "${{ github.event_name }}" = "schedule" ]; then
             python main.py send --at 07:00
