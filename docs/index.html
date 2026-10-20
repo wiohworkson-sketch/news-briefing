@@ -170,7 +170,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin-top:30px}
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const ICONS = {"증시·경제":"📈","정치·국제":"🌏","IT·AI":"💻","바이오·제약":"💊","사회·생활":"🏙️"};
+const ICONS = {"증시·경제":"📈","부동산":"🏠","정치·국제":"🌏","IT·AI":"💻","바이오·제약":"💊","사회·생활":"🏙️"};
 let dates = [];
 const pz = new URLSearchParams(location.search).get("pz");
 if (pz && /^[0-9.]+$/.test(pz)) document.documentElement.style.setProperty("--pz", pz);

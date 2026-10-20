@@ -21,6 +21,7 @@ keywords:
 # 브리핑 분야 (이름을 바꾸면 카톡/웹페이지 제목도 바뀝니다)
 sections:
   - 증시·경제
+  - 부동산
   - 정치·국제
   - IT·AI
   - 바이오·제약
@@ -66,6 +67,8 @@ feeds:
   - { name: 증시전망, origin: 국내, url: "https://news.google.com/rss/search?q=%EB%89%B4%EC%9A%95%EC%A6%9D%EC%8B%9C+%EB%A7%88%EA%B0%90+when:1d&hl=ko&gl=KR&ceid=KR:ko" }
   - { name: 증시전망, origin: 국내, url: "https://news.google.com/rss/search?q=%EC%BD%94%EC%8A%A4%ED%94%BC+%EC%A0%84%EB%A7%9D+when:1d&hl=ko&gl=KR&ceid=KR:ko" }
   - { name: 증시전망, origin: 국내, url: "https://news.google.com/rss/search?q=%ED%8A%B9%EC%A7%95%EC%A3%BC+OR+%EC%88%98%ED%98%9C%EC%A3%BC+when:1d&hl=ko&gl=KR&ceid=KR:ko" }
+  # 부동산 (구글 뉴스 검색: 아파트·분양·전세·부동산 정책)
+  - { name: 부동산뉴스, origin: 국내, url: "https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0+OR+%EC%95%84%ED%8C%8C%ED%8A%B8+OR+%EC%A0%84%EC%84%B8+OR+%EB%B6%84%EC%96%91+when:1d&hl=ko&gl=KR&ceid=KR:ko" }
   # 바이오·제약 (구글 뉴스 검색)
   - { name: 바이오뉴스, origin: 국내, url: "https://news.google.com/rss/search?q=%EB%B0%94%EC%9D%B4%EC%98%A4+OR+%EC%A0%9C%EC%95%BD+when:1d&hl=ko&gl=KR&ceid=KR:ko" }
   # ---- 외신 ----

@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 STATE = ROOT / "state" / "kakao.enc"
 TOKEN_URL = "https://kauth.kakao.com/oauth/token"
 MEMO_URL = "https://kapi.kakao.com/v2/api/talk/memo/default/send"
-SECTION_ICONS = ["📈", "🌏", "💻", "🏙️", "📰", "📰"]
+SECTION_ICONS = {"증시·경제": "📈", "부동산": "🏠", "정치·국제": "🌏", "IT·AI": "💻", "바이오·제약": "💊", "사회·생활": "🏙️"}
 
 
 def _state_key() -> bytes:
@@ -137,7 +137,7 @@ def build_messages(page: dict, url: str) -> list[dict]:
             continue
         msgs.append({
             "object_type": "list",
-            "header_title": f"{SECTION_ICONS[i % len(SECTION_ICONS)]} {sec['name']}",
+            "header_title": f"{SECTION_ICONS.get(sec['name'], '📰')} {sec['name']}",
             "header_link": link(f"#sec-{i}"),
             "contents": contents,
             "button_title": "전체 브리핑 보기",

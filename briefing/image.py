@@ -1,10 +1,10 @@
-"""카톡에 크게 보이는 브리핑 카드 이미지(900x1200)를 그린다."""
+"""카톡에 크게 보이는 브리핑 카드 이미지(가로 900px, 내용에 맞춰 세로 자름)를 그린다."""
 from datetime import date
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-W, H = 900, 1200
+W, H = 900, 1360
 PAD = 44
 BG = (255, 255, 255)
 TEXT = (28, 32, 40)
@@ -19,6 +19,9 @@ INSIGHT_BG = (235, 243, 255)
 INSIGHT_TX = (30, 64, 175)
 INSIGHT_LINE = (200, 216, 245)
 SECTION_COLORS = [(234, 88, 12), (124, 58, 237), (5, 150, 105), (220, 38, 38), (219, 39, 119), (2, 132, 199)]
+# 분야 이름별 고정 색 (분야를 추가·순서 변경해도 색이 바뀌지 않게)
+SECTION_COLOR_BY_NAME = {"증시·경제": (234, 88, 12), "부동산": (161, 98, 7), "정치·국제": (124, 58, 237),
+                         "IT·AI": (5, 150, 105), "바이오·제약": (220, 38, 38), "사회·생활": (219, 39, 119)}
 
 FONT_CANDIDATES = {
     "bold": ["/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc", "C:/Windows/Fonts/malgunbd.ttf"],
@@ -116,12 +119,12 @@ def render(page: dict, path: Path) -> int:
     y += 12
     f_tag, f_row = _font("bold", 20), _font("regular", 23)
     tag_col = 136
-    for i, sec in enumerate(b["sections"][:5]):
+    for i, sec in enumerate(b["sections"][:6]):
         titles = [it["kakao_title"] or it["title"] for it in sec["items"]]
         picks = [t for t in titles if t not in b["headlines"]][:2] or titles[:2]
         if not picks:
             continue
-        color = SECTION_COLORS[i % len(SECTION_COLORS)]
+        color = SECTION_COLOR_BY_NAME.get(sec["name"], SECTION_COLORS[i % len(SECTION_COLORS)])
         tw = int(d.textlength(sec["name"], font=f_tag)) + 20
         d.rounded_rectangle([PAD, y + 2, PAD + tw, y + 32], radius=9, fill=color)
         d.text((PAD + 10, y + 17), sec["name"], font=f_tag, fill=(255, 255, 255), anchor="lm")
