@@ -61,7 +61,9 @@ def fetch_all(cfg: dict) -> tuple[list[dict], list[str]]:
     cutoff = time.time() - cfg.get("lookback_hours", 26) * 3600
     max_items = cfg.get("max_per_feed", 15)
     with ThreadPoolExecutor(max_workers=8) as pool:
-        results = list(pool.map(lambda f: _fetch_feed(f, cutoff, max_items), cfg["feeds"]))
+        results = list(pool.map(
+            lambda f: _fetch_feed(f, time.time() - f["lookback_hours"] * 3600 if "lookback_hours" in f else cutoff,
+                                  max_items), cfg["feeds"]))
 
     articles, seen, errors = [], set(), []
     for feed, items, err in results:
