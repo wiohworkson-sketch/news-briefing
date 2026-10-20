@@ -4,7 +4,7 @@
   ※ 야후 파이낸스는 국내 지수가 하루 늦게 들어오는 경우가 있어 쓰지 않는다.
 - 그 외(미국 지수·환율·금리·원자재·코인): 야후 파이낸스
 """
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import requests
 import yfinance as yf
@@ -38,16 +38,19 @@ def option_expiry_note(today: date) -> str:
     return f"{when}({exp.month}월 {exp.day}일 목) {kind}"
 
 
-def _naver_index(code: str) -> tuple[date, float, float]:
-    """네이버 증권 일별 시세: (거래일, 종가, 전일 종가)."""
+def _naver_index(code: str, today: date) -> tuple[date, float, float]:
+    """네이버 증권 일별 시세: (거래일, 종가, 그 전 거래일 종가).
+
+    장중에는 오늘 시세가 맨 위에 오므로, 오늘보다 앞선 '마감된' 거래일만 쓴다.
+    등락은 두 거래일 종가를 직접 비교해 계산한다 (부호 오류 방지).
+    """
     resp = requests.get(f"https://m.stock.naver.com/api/index/{code}/price",
-                        params={"pageSize": 2, "page": 1}, headers={"User-Agent": UA}, timeout=15)
+                        params={"pageSize": 4, "page": 1}, headers={"User-Agent": UA}, timeout=15)
     resp.raise_for_status()
-    rows = resp.json()
     num = lambda s: float(str(s).replace(",", ""))
-    last = rows[0]
-    close = num(last["closePrice"])
-    return date.fromisoformat(last["localTradedAt"][:10]), close, close - num(last["compareToPreviousClosePrice"])
+    rows = [r for r in resp.json() if date.fromisoformat(r["localTradedAt"][:10]) < today]
+    last, prev = rows[0], rows[1]
+    return date.fromisoformat(last["localTradedAt"][:10]), num(last["closePrice"]), num(prev["closePrice"])
 
 
 def _yahoo(ticker: str) -> tuple[date, float, float]:
@@ -56,14 +59,15 @@ def _yahoo(ticker: str) -> tuple[date, float, float]:
     return hist.index[-1].date(), float(hist.iloc[-1]), float(hist.iloc[-2])
 
 
-def fetch(cfg: dict, key: str = "markets") -> list[dict]:
+def fetch(cfg: dict, key: str = "markets", today: date | None = None) -> list[dict]:
+    today = today or (datetime.now(timezone.utc) + timedelta(hours=9)).date()  # 한국 날짜
     out = []
     for m in cfg.get(key, []):
         row = {"name": m["name"], "value": None, "text": "-", "change": "", "direction": "flat", "date": ""}
         try:
             ticker = m["ticker"]
             if ticker.startswith("naver:"):
-                day, last, prev = _naver_index(ticker.split(":", 1)[1])
+                day, last, prev = _naver_index(ticker.split(":", 1)[1], today)
             else:
                 day, last, prev = _yahoo(ticker)
             scale = m.get("scale", 1)
