@@ -82,5 +82,5 @@ jobs:
           git pull --rebase && git push
 
       - name: 실패 알림
-        if: failure()
+        if: failure() && (github.event_name == 'schedule' || !inputs.skip_send)
         run: python main.py notify-error || true

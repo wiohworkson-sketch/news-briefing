@@ -101,8 +101,7 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
                      f"({'▲' if m['direction'] == 'up' else '▼' if m['direction'] == 'down' else '-'}{m['change']})")
     market_lines = [fmt(m) for m in markets]
     outlook_lines = [fmt(m) + (f" [{m['date']} 마감]" if m.get("date") else "") for m in (outlook_markets or [])]
-    kw_lines = "
-".join(
+    kw_lines = chr(10).join(
         f"  · {k['name']} — {k.get('hint', '')}" if isinstance(k, dict) else f"  · {k}" for k in cfg["keywords"])
     prompt = f"""오늘은 {date_str}입니다. 아래 자료로 아침 브리핑을 만드세요.
 
