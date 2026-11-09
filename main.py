@@ -109,7 +109,9 @@ def cmd_send(at: str | None) -> None:
         if 0 < wait < 3 * 3600:
             print(f"[정보] {at}까지 {int(wait // 60)}분 대기합니다.")
             time.sleep(wait)
-    base = os.environ.get("PAGES_URL", "").rstrip("/")
+    # 카드 이미지는 올리자마자 열리는 GitHub 원본 주소(RAW_URL)를 우선 사용
+    # (웹페이지 주소는 반영이 10분 넘게 늦어지는 날이 있음)
+    base = (os.environ.get("RAW_URL") or os.environ.get("PAGES_URL", "")).rstrip("/")
     image_url = f"{base}/{page['image']}" if page.get("image") else None
     market_url = f"{base}/{page['market_image']}" if page.get("market_image") else None
     kakao.send_briefing(page, pages_url(page["date"]), image_url, market_url)

@@ -38,6 +38,9 @@ def _fetch_feed(feed: dict, cutoff: float, max_items: int) -> tuple[dict, list[d
             continue
         source = feed["name"]
         # 구글 뉴스는 "제목 - 언론사" 형식이므로 언론사를 분리
+        must = feed.get("must_contain")  # 회사 이름 검색: 이름이 실제로 있는 기사만
+        if must and must not in title + _clean(entry.get("summary", ""), 500):
+            continue
         origin = feed["origin"]
         if "news.google.com" in feed["url"] and " - " in title:
             title, source = title.rsplit(" - ", 1)
