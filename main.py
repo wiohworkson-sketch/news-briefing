@@ -98,6 +98,16 @@ def cmd_build() -> None:
     print(f"[완료] {date_label} 브리핑 저장")
 
 
+SENT = ROOT / "state" / "last_sent.txt"  # 마지막으로 카톡을 보낸 날짜 (중복 발송 방지)
+
+
+def cmd_sent_today() -> None:
+    """오늘 이미 보냈으면 'yes', 아니면 'no'를 출력한다 (예약 실행이 여러 번 걸려 있어도 한 번만 발송)."""
+    today = datetime.now(KST).strftime("%Y-%m-%d")
+    sent = SENT.read_text(encoding="utf-8").strip() if SENT.exists() else ""
+    print("yes" if sent == today else "no")
+
+
 def cmd_send(at: str | None) -> None:
     from briefing import kakao
 
@@ -115,6 +125,8 @@ def cmd_send(at: str | None) -> None:
     image_url = f"{base}/{page['image']}" if page.get("image") else None
     market_url = f"{base}/{page['market_image']}" if page.get("market_image") else None
     kakao.send_briefing(page, pages_url(page["date"]), image_url, market_url)
+    SENT.parent.mkdir(exist_ok=True)
+    SENT.write_text(datetime.now(KST).strftime("%Y-%m-%d"), encoding="utf-8")
     print("[완료] 카톡 발송")
 
 
@@ -128,11 +140,13 @@ def cmd_notify_error() -> None:
 def main() -> None:
     load_env_file()
     p = argparse.ArgumentParser()
-    p.add_argument("command", choices=["build", "send", "notify-error"])
+    p.add_argument("command", choices=["build", "send", "notify-error", "sent-today"])
     p.add_argument("--at", help="발송 시각 HH:MM (한국시간)")
     args = p.parse_args()
     if args.command == "build":
         cmd_build()
+    elif args.command == "sent-today":
+        cmd_sent_today()
     elif args.command == "send":
         cmd_send(args.at)
     else:

@@ -2,9 +2,15 @@ name: 아침 뉴스 브리핑
 
 on:
   schedule:
-    # GitHub 시간은 UTC 기준입니다. 21:05 UTC = 한국시간 06:05 (미국장 마감 06:00 직후)
-    # (GitHub 예약 실행은 늦어질 수 있어 미리 시작하고, 07:00까지 기다렸다가 발송합니다)
-    - cron: "5 21 * * *"
+    # GitHub 시간은 UTC 기준 (한국시간 = UTC + 9시간)
+    # GitHub 무료 예약은 몇 시간씩 늦거나 건너뛰는 날이 있어 여러 번 걸어 둡니다.
+    # 가장 먼저 실행된 것이 브리핑을 보내고, 나머지는 '오늘 이미 보냄'을 확인하고 바로 끝납니다.
+    # 붐비는 정각 근처를 피해 06:17 / 06:43 / 07:13 / 07:47 / 08:23 (한국시간)
+    - cron: "17 21 * * *"
+    - cron: "43 21 * * *"
+    - cron: "13 22 * * *"
+    - cron: "47 22 * * *"
+    - cron: "23 23 * * *"
   workflow_dispatch:
     inputs:
       send_now:
@@ -36,22 +42,42 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref_name }}  # 늦게 시작해도 실행 시점의 최신 상태(발송 기록 포함)를 받음
+
+      - name: 오늘 이미 보냈는지 확인
+        id: check
+        run: |
+          today=$(TZ=Asia/Seoul date +%F)
+          sent=$(cat state/last_sent.txt 2>/dev/null || echo none)
+          echo "오늘: $today / 마지막 발송: $sent"
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$sent" = "$today" ]; then
+            echo "오늘 브리핑은 이미 보냈습니다. 이번 예약 실행은 건너뜁니다."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: actions/setup-python@v6
+        if: steps.check.outputs.skip != 'true'
         with:
           python-version: "3.12"
           cache: pip
 
-      - run: |
+      - name: 필요한 프로그램 설치
+        if: steps.check.outputs.skip != 'true'
+        run: |
           sudo apt-get install -y -qq fonts-noto-cjk > /dev/null
           pip install -r requirements.txt
 
       - name: 뉴스 수집 및 브리핑 작성
+        if: steps.check.outputs.skip != 'true'
         run: python main.py build
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: A3 인쇄용 PDF 만들기
+        if: steps.check.outputs.skip != 'true'
         continue-on-error: true
         run: |
           python -m http.server 8799 --directory docs > /dev/null 2>&1 &
@@ -59,6 +85,7 @@ jobs:
           python make_pdf.py "$(TZ=Asia/Seoul date +%F)" http://127.0.0.1:8799
 
       - name: 웹페이지 게시
+        if: steps.check.outputs.skip != 'true'
         run: |
           git config user.name "briefing-bot"
           git config user.email "briefing-bot@users.noreply.github.com"
@@ -67,7 +94,7 @@ jobs:
           git push
 
       - name: 카톡 발송
-        if: github.event_name == 'schedule' || !inputs.skip_send
+        if: steps.check.outputs.skip != 'true' && (github.event_name == 'schedule' || !inputs.skip_send)
         run: |
           if [ "${{ github.event_name }}" = "schedule" ]; then
             python main.py send --at 07:00
@@ -76,12 +103,12 @@ jobs:
           fi
 
       - name: 카카오 로그인 연장 정보 저장
-        if: always()
+        if: always() && steps.check.outputs.skip != 'true'
         run: |
           git add state || true
           git commit -m "카카오 로그인 자동 연장" || exit 0
           git pull --rebase && git push
 
       - name: 실패 알림
-        if: failure() && (github.event_name == 'schedule' || !inputs.skip_send)
+        if: steps.check.outputs.skip != 'true' && (failure() && (github.event_name == 'schedule' || !inputs.skip_send))
         run: python main.py notify-error || true
