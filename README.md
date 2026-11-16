@@ -44,6 +44,16 @@
 ### 다른 사람에게 공유하기
 카톡으로 온 브리핑의 [전체 브리핑 보기]를 누른 뒤, 브라우저 주소를 복사해 보내면 됩니다. 매일 최신 브리핑 주소: https://wiohworkson-sketch.github.io/news-briefing/
 
+## 매일 아침 실행이 시작되는 방식
+1. **외부 알람 (주 알람):** cron-job.org의 「데일리 뉴스 브리핑」이 매일 **06:20**에 GitHub에 시작 신호를 보냅니다.
+   - 신호를 보내는 데 GitHub 토큰 「데일리뉴스 브리핑」(만료 없음, news-briefing 저장소 실행 권한만)을 씁니다.
+   - 토큰을 지우거나 바꾸면 cron-job.org의 ADVANCED → Headers → `Authorization` 값도 `Bearer 새토큰`으로 바꿔야 합니다.
+2. **GitHub 예약 (예비 알람):** 06:17 / 06:43 / 07:13 / 07:47 / 08:23에 예약이 걸려 있습니다. GitHub 무료 예약은 몇 시간씩 늦거나 건너뛰는 날이 있습니다.
+3. 어느 쪽이 먼저 시작하든 **07:00에 한 번만** 카톡을 보냅니다. 나머지는 `state/last_sent.txt`(오늘 보낸 날짜)를 보고 건너뜁니다.
+
+- cron-job.org에서 알람을 잠시 멈추려면 Cronjobs 목록에서 해당 알람을 Disable 하세요.
+- ⚠️ GitHub이 신호 형식 버전(`X-GitHub-Api-Version: 2022-11-28`)을 **2028년 3월**에 종료한다고 예고했습니다. 그 전에 cron-job.org의 이 값을 새 버전으로 바꿔야 합니다 (Claude에게 요청하세요).
+
 ## 문제가 생겼을 때
 - 브리핑을 만들다 실패하면 **"⚠️ 오늘 아침 브리핑을 만들지 못했습니다"** 카톡이 옵니다. 버튼을 누르면 실행 기록(오류 내용)이 보입니다.
 - 카톡이 아예 오지 않으면 카카오 로그인이 만료됐을 수 있습니다. 보통은 자동으로 연장되지만, 문제가 생기면 PC에서 `python setup.py`를 다시 실행하세요.
@@ -63,7 +73,7 @@
 | `briefing/summarize.py` | Gemini가 분류·요약·시사점·일정 정리 |
 | `briefing/publish.py` | 브리핑을 `docs/`(웹페이지)에 저장 |
 | `briefing/kakao.py` | 카카오톡 나에게 보내기, 로그인 자동 연장 |
-| `.github/workflows/daily-briefing.yml` | 매일 06:15 시작 → 07:00 발송 예약 |
+| `.github/workflows/daily-briefing.yml` | 외부 알람·예약으로 시작 → 07:00 한 번 발송 |
 | `briefing/naver.py` | 야간선물 등락이 적힌 기사 문장 수집 |
 | `make_pdf.py` | 매일 A3 한 장짜리 인쇄용 PDF 생성 |
 | `setup.py` | 최초 1회 키 입력·카카오 연결 도우미 |
