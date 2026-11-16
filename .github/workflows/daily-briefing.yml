@@ -21,6 +21,10 @@ on:
         description: "카톡은 보내지 않고 브리핑·PDF만 만들기 (테스트용)"
         type: boolean
         default: false
+      auto:
+        description: "외부 알람(cron-job.org)용: 예약 실행처럼 07:00까지 기다렸다 발송, 오늘 이미 보냈으면 건너뜀"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -51,7 +55,7 @@ jobs:
           today=$(TZ=Asia/Seoul date +%F)
           sent=$(cat state/last_sent.txt 2>/dev/null || echo none)
           echo "오늘: $today / 마지막 발송: $sent"
-          if [ "${{ github.event_name }}" = "schedule" ] && [ "$sent" = "$today" ]; then
+          if { [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.auto }}" = "true" ]; } && [ "$sent" = "$today" ]; then
             echo "오늘 브리핑은 이미 보냈습니다. 이번 예약 실행은 건너뜁니다."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
@@ -96,7 +100,7 @@ jobs:
       - name: 카톡 발송
         if: steps.check.outputs.skip != 'true' && (github.event_name == 'schedule' || !inputs.skip_send)
         run: |
-          if [ "${{ github.event_name }}" = "schedule" ]; then
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.auto }}" = "true" ]; then
             python main.py send --at 07:00
           else
             python main.py send
