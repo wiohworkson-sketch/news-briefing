@@ -16,6 +16,23 @@ MEMO_URL = "https://kapi.kakao.com/v2/api/talk/memo/default/send"
 SECTION_ICONS = {"증시·경제": "📈", "부동산": "🏠", "정치·국제": "🌏", "IT·AI": "💻", "바이오·제약": "💊", "사회·생활": "🏙️"}
 
 
+def _post(url: str, **kwargs) -> requests.Response:
+    """카카오 서버 연결이 끊기거나 서버 오류(5xx)면 잠시 후 다시 시도한다 (최대 5번)."""
+    last = None
+    for attempt in range(5):
+        try:
+            resp = requests.post(url, timeout=20, **kwargs)
+            if resp.status_code < 500:
+                return resp
+            last = RuntimeError(f"카카오 서버 오류 {resp.status_code}")
+        except requests.RequestException as e:
+            last = e
+        wait = 15 * (attempt + 1)
+        print(f"[경고] 카카오 서버 연결 실패({type(last).__name__}), {wait}초 뒤 다시 시도합니다.")
+        time.sleep(wait)
+    raise RuntimeError(f"카카오 서버 연결 실패: {last}")
+
+
 def _state_key() -> bytes:
     return base64.b64decode(os.environ["STATE_KEY"])
 
@@ -32,13 +49,13 @@ def _load_state() -> dict:
 
 def exchange_code(code: str, redirect_uri: str) -> dict:
     """최초 연결: 인가 코드를 토큰으로 교환한다."""
-    resp = requests.post(TOKEN_URL, data={
+    resp = _post(TOKEN_URL, data={
         "grant_type": "authorization_code",
         "client_id": os.environ["KAKAO_REST_KEY"],
         "client_secret": os.environ.get("KAKAO_CLIENT_SECRET", ""),
         "redirect_uri": redirect_uri,
         "code": code,
-    }, timeout=20)
+    })
     resp.raise_for_status()
     tok = resp.json()
     save_refresh_token(tok["refresh_token"], tok.get("refresh_token_expires_in"))
@@ -47,12 +64,12 @@ def exchange_code(code: str, redirect_uri: str) -> dict:
 
 def access_token() -> str:
     state = _load_state()
-    resp = requests.post(TOKEN_URL, data={
+    resp = _post(TOKEN_URL, data={
         "grant_type": "refresh_token",
         "client_id": os.environ["KAKAO_REST_KEY"],
         "client_secret": os.environ.get("KAKAO_CLIENT_SECRET", ""),
         "refresh_token": state["refresh_token"],
-    }, timeout=20)
+    })
     if resp.status_code != 200:
         raise RuntimeError(f"카카오 로그인 갱신 실패 ({resp.status_code}): {resp.text}")
     tok = resp.json()
@@ -63,11 +80,10 @@ def access_token() -> str:
 
 
 def send(template: dict, token: str) -> None:
-    resp = requests.post(
+    resp = _post(
         MEMO_URL,
         headers={"Authorization": f"Bearer {token}"},
         data={"template_object": json.dumps(template, ensure_ascii=False)},
-        timeout=20,
     )
     if resp.status_code != 200:
         raise RuntimeError(f"카톡 전송 실패 ({resp.status_code}): {resp.text}")

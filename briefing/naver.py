@@ -1,4 +1,4 @@
-"""네이버 뉴스 검색 결과의 본문 미리보기에서 야간선물 등 숫자가 담긴 문장을 찾는다.
+"""네이버·다음 뉴스 검색 결과의 본문 미리보기에서 야간선물 등 숫자가 담긴 문장을 찾는다.
 
 뉴스 제목에는 야간선물 등락률이 잘 안 나오고 본문에만 있어서, 검색 결과 미리보기를 활용한다.
 """
@@ -43,9 +43,32 @@ def snippets(query: str, keyword: str, limit: int = 6) -> list[str]:
     return found
 
 
+def daum_snippets(query: str, limit: int = 6) -> list[str]:
+    """다음(Daum) 뉴스 검색(최근 1일, 최신순) 미리보기에서 야간선물 등락 문장을 찾는다."""
+    try:
+        resp = requests.get("https://search.daum.net/search",
+                            params={"w": "news", "q": query, "sort": "recency", "period": "d"},
+                            headers={"User-Agent": UA}, timeout=20)
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        print(f"[경고] 다음 검색 실패 ({query}): {e}")
+        return []
+    text = html.unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", resp.text)))
+    found: list[str] = []
+    for m in re.finditer(r"[^.]{0,100}야간\s?선물[^.]{0,80}%[^.]{0,40}", text):
+        s = re.sub(r"\s+", " ", m.group(0)).strip()
+        if s not in found:
+            found.append(s[:200])
+        if len(found) >= limit:
+            break
+    return found
+
+
 def night_futures() -> list[str]:
-    """코스피 야간선물 등락이 적힌 문장들 (최신순)."""
+    """코스피 야간선물 등락이 적힌 문장들 (최신순). 네이버가 막히면 다음 검색을 쓴다."""
     out = snippets("코스피 야간선물", "야간선물")
     if len(out) < 2:
         out += [s for s in snippets("코스피200 야간선물", "야간선물") if s not in out]
+    if len(out) < 2:
+        out += [s for s in daum_snippets("코스피 야간선물") if s not in out]
     return out[:6]

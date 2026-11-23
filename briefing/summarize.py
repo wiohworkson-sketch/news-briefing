@@ -87,12 +87,14 @@ SYSTEM = """당신은 한국 독자를 위한 아침 뉴스 브리핑 편집장�
 
 # 앞의 모델이 무료 한도 초과·장애일 때 다음 모델로 넘어감
 FALLBACK_MODELS = ["gemini-3.6-flash", "gemini-3.5-flash-lite"]
+RETRY_MINUTES = 40           # AI가 바쁠 때 최대 몇 분까지 다시 시도할지
+REQUEST_TIMEOUT_MS = 240_000  # 요청 한 번에 최대 4분까지만 기다림 (응답 없이 멈추는 경우 대비)
 
 
 def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg: dict,
                   outlook_markets: list[dict] | None = None, expiry_note: str = "",
                   night_lines: list[str] | None = None) -> Briefing:
-    client = genai.Client()  # GEMINI_API_KEY 환경변수 사용
+    client = genai.Client(http_options=types.HttpOptions(timeout=REQUEST_TIMEOUT_MS))  # GEMINI_API_KEY 사용
     lines = [
         f"[{a['id']}] ({a['source']}|{a['origin']}){' [키워드 후보: ' + a['keyword'] + ']' if a.get('keyword') else ''} {a['title']} — {a['summary']}"
         for a in articles
@@ -150,10 +152,15 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
         response_mime_type="application/json",
         response_schema=Briefing,
     )
+    # 무료 AI는 '사용량 폭주(503)'로 수십 분씩 막히는 날이 있어,
+    # 세 모델을 번갈아 가며 최대 RETRY_MINUTES 동안 계속 다시 시도한다.
     models = [cfg.get("model", "gemini-3.8-flash")] + FALLBACK_MODELS
+    deadline = time.time() + RETRY_MINUTES * 60
     last_error = None
-    for model in models:
-        for attempt in range(3):
+    round_no = 0
+    while models and time.time() < deadline:
+        round_no += 1
+        for model in list(models):
             try:
                 resp = client.models.generate_content(model=model, contents=prompt, config=config)
                 result = resp.parsed or Briefing.model_validate_json(resp.text)
@@ -162,16 +169,17 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
                 return result
             except errors.APIError as e:
                 last_error = e
-                print(f"[경고] {model} 오류 ({e.code}): {e.message}")
-                if e.code in (429, 500, 503):  # 한도 초과·일시 장애 → 잠시 후 재시도
-                    time.sleep(20 * (attempt + 1))
-                    continue
-                break  # 그 외 오류는 다음 모델로
-            except ValueError as e:  # 응답 형식 오류 → 재시도
+                print(f"[경고] {round_no}회차 {model} 오류 ({e.code}): {e.message}")
+                if e.code not in (408, 429, 500, 502, 503, 504):  # 일시 장애가 아니면 이 모델은 제외
+                    models.remove(model)
+            except ValueError as e:  # 응답 형식 오류 → 다음 회차에 재시도
                 last_error = e
-                print(f"[경고] {model} 응답 형식 오류: {e}")
-            except Exception as e:  # 연결 끊김·시간 초과 등 네트워크 오류 → 잠시 후 재시도
+                print(f"[경고] {round_no}회차 {model} 응답 형식 오류: {e}")
+            except Exception as e:  # 연결 끊김·응답 시간 초과 → 다음 회차에 재시도
                 last_error = e
-                print(f"[경고] {model} 연결 오류 ({type(e).__name__}): {e}")
-                time.sleep(15 * (attempt + 1))
-    raise RuntimeError(f"AI 브리핑 작성 실패: {last_error}")
+                print(f"[경고] {round_no}회차 {model} 연결 오류 ({type(e).__name__}): {e}")
+        wait = min(30 * round_no, 120)
+        if time.time() + wait < deadline:
+            print(f"[정보] 모든 모델이 바쁩니다. {wait}초 뒤 다시 시도합니다.")
+            time.sleep(wait)
+    raise RuntimeError(f"AI 브리핑 작성 실패 ({RETRY_MINUTES}분 동안 재시도): {last_error}")
