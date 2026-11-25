@@ -111,14 +111,26 @@ def cmd_sent_today() -> None:
 def cmd_send(at: str | None) -> None:
     from briefing import kakao
 
-    page = json.loads(OUT.read_text(encoding="utf-8"))
+    if OUT.exists():
+        page = json.loads(OUT.read_text(encoding="utf-8"))
+    else:  # '발송만' 실행: 이미 웹페이지에 올라간 오늘 브리핑을 읽어서 보낸다
+        today = datetime.now(KST).strftime("%Y-%m-%d")
+        published = ROOT / "docs" / "data" / f"{today}.json"
+        if not published.exists():
+            print(f"[정보] 오늘({today}) 브리핑이 아직 만들어지지 않아 보내지 않습니다.")
+            return
+        page = json.loads(published.read_text(encoding="utf-8"))
+        print(f"[정보] 웹페이지에 올라간 오늘 브리핑을 읽어 보냅니다.")
     if at:
         h, m = map(int, at.split(":"))
         target = datetime.now(KST).replace(hour=h, minute=m, second=0, microsecond=0)
         wait = (target - datetime.now(KST)).total_seconds()
         if 0 < wait < 3 * 3600:
             print(f"[정보] {at}까지 {int(wait // 60)}분 대기합니다.")
-            time.sleep(wait)
+            # 오래 아무 출력 없이 멈춰 있으면 실행 서버가 작업을 끊는 경우가 있어 1분마다 기록을 남긴다
+            while (left := (target - datetime.now(KST)).total_seconds()) > 0:
+                print(f"[정보] 발송 대기 중… {int(left // 60)}분 {int(left % 60)}초 남음")
+                time.sleep(min(60, left))
     # 카드 이미지는 올리자마자 열리는 GitHub 원본 주소(RAW_URL)를 우선 사용
     # (웹페이지 주소는 반영이 10분 넘게 늦어지는 날이 있음)
     base = (os.environ.get("RAW_URL") or os.environ.get("PAGES_URL", "")).rstrip("/")
@@ -154,5 +166,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)  # 기록이 즉시 남도록
     main()
