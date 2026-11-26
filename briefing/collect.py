@@ -53,6 +53,7 @@ def _fetch_feed(feed: dict, cutoff: float, max_items: int) -> tuple[dict, list[d
             "source": source,
             "origin": origin,
             "keyword": feed.get("keyword", ""),
+            "feed": feed["name"] + " " + feed["url"],  # 비상 브리핑에서 분야를 나눌 때 사용
             "ts": ts,
         })
         if len(items) >= max_items:

@@ -183,3 +183,56 @@ def make_briefing(articles: list[dict], markets: list[dict], date_str: str, cfg:
             print(f"[정보] 모든 모델이 바쁩니다. {wait}초 뒤 다시 시도합니다.")
             time.sleep(wait)
     raise RuntimeError(f"AI 브리핑 작성 실패 ({RETRY_MINUTES}분 동안 재시도): {last_error}")
+
+
+# ───────────── AI가 끝내 안 될 때: 비상 브리핑 ─────────────
+# 출처 피드(언론사의 분야별 RSS·검색어)로 기사를 분야에 나누고, AI 요약 없이 제목과 링크만 전한다.
+FALLBACK_SECTION_RULES = [
+    ("부동산", ("realestate", "부동산뉴스")),
+    ("바이오·제약", ("바이오뉴스",)),
+    ("IT·AI", ("feed/it", "etnews")),
+    ("정치·국제", ("politics.xml", "international.xml")),
+    ("사회·생활", ("society.xml",)),
+    ("증시·경제", ("economy", "market.xml", "industry.xml", "finance", "mk.co.kr", "증시전망")),
+]
+
+
+def _fallback_item(a: dict) -> Item:
+    return Item(title=a["title"][:60], summary=a.get("summary", "")[:90] or "기사 원문을 확인하세요.",
+                kakao_title=a["title"][:20], kakao_desc=a["source"][:22], article_ids=[a["id"]])
+
+
+def fallback_briefing(articles: list[dict], cfg: dict, night_lines: list[str] | None, expiry_note: str) -> Briefing:
+    domestic = [a for a in articles if a["origin"] == "국내" and not a.get("keyword")]
+    buckets: dict[str, list[dict]] = {name: [] for name in cfg["sections"]}
+    for a in domestic:
+        for name, marks in FALLBACK_SECTION_RULES:
+            if name in buckets and any(m in a.get("feed", "") for m in marks):
+                buckets[name].append(a)
+                break
+    n = cfg.get("items_per_section", 3)
+    sections = [Section(name=name, items=[_fallback_item(a) for a in buckets[name][:n]]) for name in cfg["sections"]]
+    top = [s.items[0].title for s in sections if s.items][:3]
+    keywords = []
+    for k in cfg["keywords"]:
+        name = k["name"] if isinstance(k, dict) else k
+        hits = [a for a in articles if a.get("keyword") == name][:2]
+        keywords.append(KeywordHit(keyword=name, items=[_fallback_item(a) for a in hits]))
+    night = (night_lines or [""])[0]
+    notice = "AI 요약 서버 장애로 오늘은 기사 제목만 전해드립니다."
+    return Briefing(
+        market=MarketOutlook(
+            night_futures=night[:40] if night else "야간선물 기사 없음",
+            overnight=["AI 분석 장애로 밤사이 변수 정리를 생략했습니다"],
+            kospi_open="확인 불가", kospi_reason="AI 분석 장애로 예상 생략",
+            kosdaq_open="확인 불가", kosdaq_reason="AI 분석 장애로 예상 생략",
+            sectors_up=[], sectors_down=[], events=[expiry_note] if expiry_note else [], article_ids=[]),
+        headlines=top or ["오늘의 주요 기사는 전체 브리핑에서 확인하세요"],
+        insight=[notice, "분야별 기사 제목을 누르면 원문을 볼 수 있습니다."],
+        insight_easy=EasyInsight(what="AI 요약 서버가 너무 붐벼서 오늘은 요약을 못 했어요.",
+                                 impact="그래서 오늘은 분야별 기사 제목만 모아서 보내요.",
+                                 result="자세한 내용은 [전체 브리핑]에서 기사 원문을 눌러 보세요."),
+        insight_it="", insight_market="",
+        insight_kakao=notice, market_comment="(AI 요약 장애 · 기사 제목만 제공)",
+        sections=sections, perspectives=[], schedule=[], keywords=keywords,
+    )

@@ -65,6 +65,14 @@ jobs:
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
+          # 브리핑을 새로 만들지: '발송만'이라도 오늘 브리핑이 아직 없으면 처음부터 만든다
+          if [ "${{ inputs.send_only }}" = "true" ] && [ -f "docs/data/$today.json" ]; then
+            echo "오늘 브리핑이 이미 만들어져 있어 발송만 합니다."
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            [ "${{ inputs.send_only }}" = "true" ] && echo "오늘 브리핑이 아직 없어 처음부터 새로 만듭니다."
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: actions/setup-python@v6
         if: steps.check.outputs.skip != 'true'
@@ -75,17 +83,17 @@ jobs:
       - name: 필요한 프로그램 설치
         if: steps.check.outputs.skip != 'true'
         run: |
-          if [ "${{ inputs.send_only }}" != "true" ]; then sudo apt-get install -y -qq fonts-noto-cjk > /dev/null; fi
+          if [ "${{ steps.check.outputs.build }}" = "true" ]; then sudo apt-get install -y -qq fonts-noto-cjk > /dev/null; fi
           pip install -r requirements.txt
 
       - name: 뉴스 수집 및 브리핑 작성
-        if: steps.check.outputs.skip != 'true' && !inputs.send_only
+        if: steps.check.outputs.skip != 'true' && steps.check.outputs.build == 'true'
         run: python main.py build
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: A3 인쇄용 PDF 만들기
-        if: steps.check.outputs.skip != 'true' && !inputs.send_only
+        if: steps.check.outputs.skip != 'true' && steps.check.outputs.build == 'true'
         continue-on-error: true
         run: |
           python -m http.server 8799 --directory docs > /dev/null 2>&1 &
@@ -93,7 +101,7 @@ jobs:
           python make_pdf.py "$(TZ=Asia/Seoul date +%F)" http://127.0.0.1:8799
 
       - name: 웹페이지 게시
-        if: steps.check.outputs.skip != 'true' && !inputs.send_only
+        if: steps.check.outputs.skip != 'true' && steps.check.outputs.build == 'true'
         run: |
           git config user.name "briefing-bot"
           git config user.email "briefing-bot@users.noreply.github.com"

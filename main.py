@@ -56,8 +56,13 @@ def cmd_build() -> None:
     from briefing import naver
     night = naver.night_futures()
     print(f"[정보] 야간선물 기사 문장 {len(night)}개")
-    b = summarize.make_briefing(articles, mk, f"{now.year}년 {date_label}", cfg,
-                                outlook_mk, expiry, night).model_dump()
+    try:
+        b = summarize.make_briefing(articles, mk, f"{now.year}년 {date_label}", cfg,
+                                    outlook_mk, expiry, night).model_dump()
+    except RuntimeError as e:  # AI가 끝내 안 되면, 아무것도 안 보내는 대신 기사 제목만으로 비상 브리핑
+        print(f"[경고] {e}")
+        print("[경고] AI 없이 기사 제목만으로 비상 브리핑을 만듭니다.")
+        b = summarize.fallback_briefing(articles, cfg, night, expiry).model_dump()
 
     used = set()
     for sec in b["sections"]:
